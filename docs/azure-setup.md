@@ -1,153 +1,113 @@
 # Nodebucket on Azure: free-tier demo
 
-## What this setup does
+## Architecture
 
-The Angular frontend and Express backend run together on one Azure App Service
-Linux F1 plan. Express talks to one Cosmos DB account using its MongoDB 4.2 API
-through Mongoose 8. GitHub Actions builds and tests the app, packages only the
-runtime files, and deploys the package after checks pass.
+Azure Static Web Apps **Free** serves the Angular frontend and includes a managed
+Node.js 22 Functions API under `/api`. The API stores tasks in Cosmos DB's MongoDB
+4.2 API through Mongoose 8. The same task operations also run through Express for
+local development. The portfolio stays on GitHub Pages and links to the demo.
 
-The portfolio stays on GitHub Pages. Add this app's actual Azure URL to its
-Nodebucket project entry only after the live checks below pass.
+We selected Static Web Apps because the subscription's App Service F1 quota was
+zero in East US, East US 2 and West US 2. This setup provisions no App Service plan,
+VM, separate Function App, or separate function storage account.
 
 ## Cost boundaries
 
-- App Service is hardcoded to **F1 / Free**, without Always On or paid scaling.
-  F1 has shared compute, daily quotas and idle shutdown. This is a portfolio demo.
-- Cosmos uses **provisioned throughput**, `enableFreeTier: true`, **one region**,
-  a **1,000 RU/s account ceiling**, and one collection at **400 RU/s**. If free
-  tier is already used elsewhere in the subscription, stop; do not disable it.
-- There is no serverless Cosmos account, paid App Service fallback, VM,
-  Application Insights, Log Analytics workspace, or paid deployment slot.
-- The app writes only one fixed demo document, with at most 50 short tasks.
-  Visitors cannot create users, collections, or arbitrary documents through the API.
-- The 1,000 RU/s and 25 GB allowances belong to the Cosmos account, not each app.
-  Do not add other projects, regions, databases, or retention settings without
-  checking the total cost.
-- These choices target $0 within Microsoft's allowances; they are **not a
-  subscription-wide spending cap**. Budget alerts do not stop charges. Storage,
-  data transfer, backups, configuration changes, and other resources must remain
-  within applicable allowances.
-- New Azure free accounts normally require an upgrade to pay-as-you-go after
-  30 days or trial-credit exhaustion to continue using services. Keep the trial
-  spending limit enabled. Do not upgrade automatically; decide separately
-  whether that billing arrangement fits your $0 requirement.
+- Static Web Apps SKU is hardcoded to **Free**. Its included managed API does not
+  require upgrading to Standard or provisioning a separate paid Functions plan.
+  Preview deployments are disabled. Included bandwidth is 100 GB per subscription
+  per month, with no overage bandwidth on Free.
+- Cosmos has **free tier enabled**, **one region**, a **1,000 RU/s account cap**,
+  and **one collection at 400 RU/s**. It uses provisioned throughput, not serverless.
+- Cosmos's ongoing free allowance is 1,000 RU/s and 25 GB for the account. Do not
+  add databases, regions, throughput, or extra retained backups without reviewing
+  the aggregate cost. The app stores one fixed demo document with at most 50 tasks.
+- No Application Insights, Log Analytics, paid deployment slots, or paid hosting
+  fallback is provisioned.
+- Keep the Free Trial subscription's **spending limit On**. The services target
+  free allowances; this is not a permanent subscription-wide spending guarantee.
+  Azure normally requires a separate pay-as-you-go decision when the trial ends.
+  Do not automatically upgrade or remove the spending limit.
+- Budget alerts notify; they do not stop spending. Storage, data transfer, and
+  any resources added outside this template also need to remain within allowances.
 
 Official references:
-[App Service](https://azure.microsoft.com/en-us/pricing/details/app-service/linux/),
+[Static Web Apps plans](https://learn.microsoft.com/en-us/azure/static-web-apps/plans),
+[Static Web Apps quotas](https://learn.microsoft.com/en-us/azure/static-web-apps/quotas),
 [Cosmos free tier](https://learn.microsoft.com/en-us/azure/cosmos-db/free-tier),
 [throughput cap](https://learn.microsoft.com/en-us/azure/cosmos-db/limit-total-account-throughput),
 [free account lifecycle](https://learn.microsoft.com/en-us/azure/cost-management-billing/manage/avoid-charges-free-account).
 
-## Account setup: the part you must do
+## Provisioning
 
-1. Create an [Azure free account](https://azure.microsoft.com/free/). Complete
-   sign-in and Microsoft's identity/card verification yourself. Never paste a
-   password, card number, or database key into chat or GitHub.
-2. Keep the trial spending limit enabled.
-3. Once signup is complete, the remaining provisioning can be done with your
-   signed-in Azure CLI session. No resources have been provisioned merely by
-   adding these files to GitHub.
-
-## Provision when ready
-
-Use a dedicated, empty resource group. The following commands are examples for
-an authenticated Azure CLI; replace the example app/account names with unique
-lowercase names. Validate F1 availability in the selected region before creating
-resources. If Azure rejects the region or quota, stop and choose another free-tier
-region—never upgrade the SKU to make the deployment succeed.
+Use an authenticated Azure CLI and a dedicated resource group. Verify the active
+subscription is your intended Free Trial and its spending limit remains enabled.
+The default resource location is East US 2. Names must be available.
 
 ```sh
 az login
 az account show --query '{name:name,id:id}' --output table
-az appservice list-locations --sku F1 --linux-workers-enabled --output table
 az provider register --namespace Microsoft.Web --wait
 az provider register --namespace Microsoft.DocumentDB --wait
-az provider register --namespace Microsoft.ManagedIdentity --wait
 az group create --name nodebucket-demo --location eastus
 az deployment group validate \
-  --resource-group nodebucket-demo \
-  --template-file infra/main.bicep \
-  --parameters appName=YOUR-UNIQUE-APP cosmosName=YOUR-UNIQUE-COSMOS
+  --resource-group nodebucket-demo --template-file infra/main.bicep \
+  --parameters appName=YOUR-APP-NAME cosmosName=YOUR-COSMOS-NAME
 az deployment group what-if \
-  --resource-group nodebucket-demo \
-  --template-file infra/main.bicep \
-  --parameters appName=YOUR-UNIQUE-APP cosmosName=YOUR-UNIQUE-COSMOS
-```
-
-Review the plan: F1, free Cosmos, one region, one 400 RU/s collection, account cap
-1,000. `what-if` is a resource preview, not a price quotation.
-
-Then run:
-
-```sh
+  --resource-group nodebucket-demo --template-file infra/main.bicep \
+  --parameters appName=YOUR-APP-NAME cosmosName=YOUR-COSMOS-NAME
 az deployment group create \
-  --resource-group nodebucket-demo \
-  --name nodebucket-free \
+  --resource-group nodebucket-demo --name nodebucket-free \
   --template-file infra/main.bicep \
-  --parameters appName=YOUR-UNIQUE-APP cosmosName=YOUR-UNIQUE-COSMOS \
+  --parameters appName=YOUR-APP-NAME cosmosName=YOUR-COSMOS-NAME \
   --query properties.outputs --output json
 ```
 
-The template creates the database and collection before configuring the app.
-Its connection string is passed directly to App Service settings and is never
-output or stored in the repository. Cosmos permits only the app's possible
-outbound IP addresses; local machines and GitHub runners cannot access it.
-Redeploy the template if those outbound addresses change.
+The template configures the database connection directly in the API's Azure app
+settings. It never outputs the connection string. Managed Static Web Apps APIs
+have no dedicated outbound IP; Cosmos uses a public TLS endpoint protected by its
+key, which stays server-side. No database key goes into the browser bundle or Git.
 
-No paid cloud resources are required for the deployment identity. GitHub uses a
-short-lived OpenID Connect token, limited to Website Contributor on this app.
-The identity cannot create infrastructure or increase the plan tier.
+## Automatic deployment
 
-## Enable automatic deployment
+The GitHub workflow tests and builds pull requests. It deploys `main` only when
+`AZURE_DEPLOY_ENABLED=true`, using the GitHub environment named `azure`, restricted
+to the `main` branch.
 
-In GitHub repository settings, create an environment named **azure** and restrict
-deployment branches to **main**. Add these repository Actions variables using
-the non-secret deployment outputs:
+Store the app-specific Azure Static Web Apps deployment token in GitHub Actions
+secret `AZURE_STATIC_WEB_APPS_API_TOKEN`. Transfer it directly using secure tools;
+do not paste it into source, logs, or chat. This token can deploy this static app,
+not provision additional Azure infrastructure. Rotate it if exposed.
 
-| Variable | Template output |
-| --- | --- |
-| `AZURE_CLIENT_ID` | `azureClientId` |
-| `AZURE_TENANT_ID` | `azureTenantId` |
-| `AZURE_SUBSCRIPTION_ID` | `azureSubscriptionId` |
-| `AZURE_WEBAPP_NAME` | `azureWebAppName` |
-| `AZURE_DEPLOY_ENABLED` | Set to `true` only after provisioning |
+The artifact includes a prebuilt frontend and locked production API dependencies.
+The workflow uploads both, then checks `/api/health` until a real Cosmos database
+ping succeeds. No infrastructure is created by CI.
 
-Run **Nodebucket checks and Azure deploy** on `main` from the Actions tab.
-Future pushes to `main` will test, build, and deploy. Pull requests run checks only.
-The workflow does not provision infrastructure, and deployment stays skipped
-while `AZURE_DEPLOY_ENABLED` is unset.
+## Live verification
 
-## Verify the live demo
-
-1. Visit `/health` on the real app URL and check for `{"status":"ok"}`.
-2. Open the demo with employee ID **1007**.
+1. Open `/api/health` on the template's actual app URL and expect `{"status":"ok"}`.
+2. Enter **1007** on the demo page.
 3. Add a sample task, reload, move it to Done, reload, and delete it.
-4. Verify that another employee ID is rejected and that tasks never exceed 50.
-5. Restart the web app and confirm tasks survive.
-6. Check the Azure portal: F1 plan, Cosmos free-tier enabled, one region,
-   400 RU/s collection, 1,000 RU/s cap, and no unexpected resources/charges.
-7. Only then add the verified demo URL to the portfolio.
+4. Verify another employee ID is rejected and more than 50 tasks are rejected.
+5. Check Azure: Static Web Apps Free, Cosmos free tier, one region, collection
+   throughput 400, account cap 1,000, and subscription spending limit On.
+6. Add the verified app URL to the portfolio only after the live checks pass.
 
-Local MongoDB integration tests verify application behavior, not Cosmos protocol
-compatibility or Azure permissions. Bicep compilation validates the template
-syntax/types, not regional F1 availability or the account's quota.
+## Demo limitations
 
-## Demo limitations and legacy code
+This is a **shared public board**, not an authentication system. Employee ID 1007
+and browser cookies only open the demo. Everyone can see and change its sample
+tasks. Do not store personal information. Real accounts need a separate design.
 
-Employee ID 1007 is **not authentication**. Every visitor shares one board, can
-see/change its tasks, and may encounter concurrent-edit messages. Cookies only
-remember that the visitor opened the demo. Do not store personal information.
-Real accounts would need a separate authentication and authorization design.
+The API validates input, limits task storage, uses optimistic concurrency, and
+throttles requests per warm Functions instance. This is not an account-wide rate
+limit; Cosmos's provisioned throughput cap remains independent of API scaling.
 
-The original Angular 14 frontend remains legacy code. Building it with Node 22
-is a practical compatibility check, not an official Angular 14 support guarantee.
-The deployed backend uses its own current dependency lockfile; it does not
-install the old root server dependencies. A frontend framework upgrade is
-separate work.
+Angular 14 remains legacy code. A successful Node 22 build is a compatibility
+check, not an official Angular 14 support guarantee. The backend has its own
+modern, locked dependencies. Framework modernization is separate work.
 
-The old repository contained a database connection string in
-`server/data/config.json`. That file is removed from current code. Revoke or
-rotate any credentials that appeared there: deleting it does not remove Git
-history or copies already downloaded. This demo uses a newly created Cosmos
-database, never the old database.
+The original `server/data/config.json` contained database credentials. It is
+removed from current code, but old values remain in Git history. Rotate any still
+active credentials. This deployment uses a newly created Cosmos database and
+never connects to the original database.

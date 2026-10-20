@@ -9,9 +9,9 @@ account system; do not enter personal information.
 
 ## Status
 
-Azure deployment is prepared but disabled until the owner completes Azure signup,
-provisions the free resources, and sets the repository variables. No Azure demo
-URL is claimed until the live database and browser checks pass.
+Deployment uses Azure Static Web Apps Free with its included Node.js API and
+Cosmos DB. The deployment workflow is enabled only after infrastructure is ready
+and the GitHub deployment secret is configured.
 
 ## Local development
 
@@ -53,11 +53,12 @@ make it an officially supported Angular version. See the setup guide for limits.
 Read [the setup guide](docs/azure-setup.md) for the account handoff, billing
 boundaries, provisioning, GitHub variables, and live verification checklist.
 
-- Azure App Service **F1 / Free**, Node 22, single instance.
+- Azure Static Web Apps **Free**, including a managed Node.js 22 Functions API.
 - Cosmos DB **MongoDB API**, free tier enabled, one region, one 400 RU/s collection,
   1,000 RU/s account cap.
 - GitHub Actions tests and builds pull requests. Deployment requires an explicitly
-  enabled variable and the `azure` environment; it uses short-lived OIDC tokens.
+  enabled variable and the `azure` environment; it uses an app-specific deployment
+  token stored in GitHub Actions secrets and verifies Cosmos connectivity afterward.
 - No Azure resources are created by CI. Infrastructure provisioning is separate.
 
 The original database config was removed from current code. Rotate any old
