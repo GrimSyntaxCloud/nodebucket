@@ -4,12 +4,13 @@ import { execFileSync } from 'node:child_process';
 // Explicit allowlist: no .git, .env, legacy config, test DB, or source maps.
 await rm('release', { recursive: true, force: true });
 await mkdir('release/server', { recursive: true });
-for (const file of ['index.js', 'app.js', 'database.js', 'package.json', 'package-lock.json']) {
+for (const file of ['index.js', 'app.js', 'database.js', 'tasks.js', 'functions.js', 'function-handler.js', 'host.json', 'package.json', 'package-lock.json']) {
   await cp(`server/${file}`, `release/server/${file}`);
 }
 await cp('server/models', 'release/server/models', { recursive: true });
 await cp('server/routes', 'release/server/routes', { recursive: true });
 await cp('dist/nodebucket', 'release/dist/nodebucket', { recursive: true });
+await cp('staticwebapp.config.json', 'release/dist/nodebucket/staticwebapp.config.json');
 execFileSync('npm', ['ci', '--omit=dev', '--ignore-scripts', '--no-audit', '--no-fund'], {
   cwd: 'release/server', stdio: 'inherit',
 });

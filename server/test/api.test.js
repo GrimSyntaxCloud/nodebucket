@@ -103,3 +103,48 @@ test('global rate limiting cannot be bypassed by spoofed proxy headers', async (
     await new Promise(resolve => limited.close(resolve));
   }
 });
+
+test('Azure Functions adapter persists tasks and verifies a real database ping', async () => {
+  const { HttpRequest } = require('@azure/functions');
+  const { createFunctionHandler } = require('../function-handler');
+  const handler = createFunctionHandler();
+  const call = (path, method = 'GET', body) => handler(new HttpRequest({
+    url: `https://example.test/api/${path}`, method, params: { path },
+    headers: { 'Content-Type': 'application/json' },
+    ...(body === undefined ? {} : { body: { string: JSON.stringify(body) } }),
+  }));
+  assert.equal((await call('health')).jsonBody.status, 'ok');
+  const result = await call('employees/1007/tasks', 'POST', { text: 'Function test task' });
+  assert.equal(result.status, 201);
+  const task = result.jsonBody.todo.at(-1);
+  assert.equal((await call('employees/1007/tasks')).jsonBody.todo.length, 2);
+  assert.equal((await call('employees/1007/tasks', 'PUT', {
+    todo: result.jsonBody.todo.slice(0, -1), done: [task],
+  })).status, 200);
+  assert.equal((await call(`employees/1007/tasks/${task._id}`, 'DELETE')).status, 200);
+  assert.equal((await call('employees/1012')).status, 404);
+  assert.equal((await call('employees/1007/tasks', 'POST', { text: 'x'.repeat(20000) })).status, 413);
+  const invalid = await handler(new HttpRequest({
+    url: 'https://example.test/api/employees/1007/tasks', method: 'POST',
+    params: { path: 'employees/1007/tasks' }, body: { string: '{' },
+  }));
+  assert.equal(invalid.status, 400);
+});
+
+test('Azure Functions throttles requests and hides connection error details', async () => {
+  const { HttpRequest } = require('@azure/functions');
+  const { createFunctionHandler } = require('../function-handler');
+  const request = () => new HttpRequest({
+    url: 'https://example.test/api/health', method: 'GET', params: { path: 'health' },
+  });
+  let time = 0;
+  const limited = createFunctionHandler({ limit: 1, now: () => time });
+  assert.equal((await limited(request())).status, 200);
+  assert.equal((await limited(request())).status, 429);
+  time = 60001;
+  assert.equal((await limited(request())).status, 200);
+  const unavailable = createFunctionHandler({ prepare: async () => { throw new Error('private connection details'); } });
+  const result = await unavailable(request());
+  assert.equal(result.status, 503);
+  assert.ok(!JSON.stringify(result).includes('private connection'));
+});
