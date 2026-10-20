@@ -65,7 +65,6 @@ export class LoginComponent implements OnInit {
         }
       },
       error: (e) => {
-        console.log(e);
         this.errorMessages = [
           { severity: 'error', summary: 'Error', detail: e.error?.err || "The demo is unavailable. Please try again shortly." }
         ]

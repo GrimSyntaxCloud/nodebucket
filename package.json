@@ -12,7 +12,9 @@
     "render-deploy": "ng build --configuration=production",
     "frontend": "ng serve",
     "test:server": "npm --prefix server test",
-    "package": "node scripts/package.mjs"
+    "package": "node scripts/package.mjs",
+    "preview": "node server/test/preview.cjs",
+    "test:ui": "ng test --watch=false --browsers=ChromeHeadless"
   },
   "engines": {
     "node": "22.x"

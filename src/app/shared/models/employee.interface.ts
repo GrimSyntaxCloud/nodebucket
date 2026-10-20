@@ -19,6 +19,7 @@
 import {Item} from './item.interface'
 
 export interface Employee {
+  __v: number;
   empId: number,
   firstName: string;
   lastName: string;

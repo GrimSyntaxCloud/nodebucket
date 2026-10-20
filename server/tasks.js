@@ -18,6 +18,7 @@ async function handleTasks(method, path, body) {
   if (method === 'POST' && !validText(body?.text)) return fail(400, 'Task names must contain 3–35 characters.');
   if (method === 'DELETE' && !objectIdPattern.test(taskId)) return fail(400, 'Invalid task ID.');
   if (method === 'PUT') {
+    if (!Number.isSafeInteger(body?.version) || body.version < 0) return fail(400, 'Refresh this page before moving tasks.');
     if (!Array.isArray(body?.todo) || !Array.isArray(body?.done) || body.todo.length + body.done.length > MAX_TASKS) {
       return fail(400, 'Provide valid task lists with at most 50 tasks.');
     }
@@ -33,6 +34,9 @@ async function handleTasks(method, path, body) {
     employee.todo.push({ text: body.text.trim() });
   }
   if (method === 'PUT') {
+    // Validate the version the visitor actually saw, not just the version read
+    // by this request. Mongoose also guards changes between this read and save.
+    if (body.version !== employee.__v) return fail(409, 'Another visitor changed the board. Reloaded the latest tasks; please try again.');
     const tasks = [...body.todo, ...body.done];
     const existing = new Map([...employee.todo, ...employee.done].map(task => [String(task._id), task.text]));
     const ids = new Set(tasks.map(task => task._id));

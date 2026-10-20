@@ -44,7 +44,7 @@ test('create, persist, move and delete a task; seed does not erase changes', asy
   await seedDemo();
   const loaded = await request(tasksUrl);
   assert.equal(loaded.body.todo.at(-1)._id, task._id);
-  const moved = await request(tasksUrl, 'PUT', { todo: loaded.body.todo.slice(0, -1), done: [task] });
+  const moved = await request(tasksUrl, 'PUT', { version: loaded.body.__v, todo: loaded.body.todo.slice(0, -1), done: [task] });
   assert.equal(moved.status, 200);
   assert.equal(moved.body.done[0]._id, task._id);
   const deleted = await request(`${tasksUrl}/${task._id}`, 'DELETE');
@@ -72,11 +72,11 @@ test('only the public demo document is accessible; reject malformed input', asyn
 test('stale reorder cannot erase a new task, change text, or duplicate IDs', async () => {
   const old = (await request(tasksUrl)).body;
   await request(tasksUrl, 'POST', { text: 'Added by another visitor' });
-  assert.equal((await request(tasksUrl, 'PUT', { todo: old.todo, done: [] })).status, 409);
+  assert.equal((await request(tasksUrl, 'PUT', { version: old.__v, todo: old.todo, done: [] })).status, 409);
   const current = (await request(tasksUrl)).body;
-  assert.equal((await request(tasksUrl, 'PUT', { todo: [current.todo[0], current.todo[0]], done: [] })).status, 409);
+  assert.equal((await request(tasksUrl, 'PUT', { version: current.__v, todo: [current.todo[0], current.todo[0]], done: [] })).status, 409);
   current.todo[0].text = 'Changed text';
-  assert.equal((await request(tasksUrl, 'PUT', { todo: current.todo, done: [] })).status, 409);
+  assert.equal((await request(tasksUrl, 'PUT', { version: current.__v, todo: current.todo, done: [] })).status, 409);
   assert.equal((await request(tasksUrl)).body.todo.length, 2);
 });
 
@@ -119,14 +119,14 @@ test('Azure Functions adapter persists tasks and verifies a real database ping',
   const task = result.jsonBody.todo.at(-1);
   assert.equal((await call('employees/1007/tasks')).jsonBody.todo.length, 2);
   assert.equal((await call('employees/1007/tasks', 'PUT', {
-    todo: result.jsonBody.todo.slice(0, -1), done: [task],
+    version: result.jsonBody.__v, todo: result.jsonBody.todo.slice(0, -1), done: [task],
   })).status, 200);
   assert.equal((await call(`employees/1007/tasks/${task._id}`, 'DELETE')).status, 200);
   assert.equal((await call('employees/1012')).status, 404);
   assert.equal((await call('employees/1007/tasks', 'POST', { text: 'x'.repeat(20000) })).status, 413);
   const invalid = await handler(new HttpRequest({
     url: 'https://example.test/api/employees/1007/tasks', method: 'POST',
-    params: { path: 'employees/1007/tasks' }, body: { string: '{' },
+    params: { path: 'employees/1007/tasks' }, headers: { 'Content-Type': 'application/json' }, body: { string: '{' },
   }));
   assert.equal(invalid.status, 400);
 });
@@ -147,4 +147,31 @@ test('Azure Functions throttles requests and hides connection error details', as
   const result = await unavailable(request());
   assert.equal(result.status, 503);
   assert.ok(!JSON.stringify(result).includes('private connection'));
+});
+
+// Two tabs can contain exactly the same tasks but different board positions.
+test('an older tab cannot undo another visitor’s move or reorder', async () => {
+  await request(tasksUrl, 'POST', { text: 'Second task' });
+  const original = (await request(tasksUrl)).body;
+  const moved = await request(tasksUrl, 'PUT', { version: original.__v, todo: original.todo.slice(1), done: [original.todo[0]] });
+  assert.equal(moved.status, 200);
+  const stale = await request(tasksUrl, 'PUT', { version: original.__v, todo: original.todo.slice().reverse(), done: [] });
+  assert.equal(stale.status, 409);
+  assert.equal((await request(tasksUrl)).body.done[0]._id, original.todo[0]._id);
+  assert.equal((await request(tasksUrl, 'PUT', { todo: moved.body.todo, done: moved.body.done })).status, 400);
+  const fresh = await request(tasksUrl, 'PUT', { version: moved.body.__v, todo: [...moved.body.todo, ...moved.body.done], done: [] });
+  assert.equal(fresh.status, 200);
+});
+
+test('both adapters reject non-JSON writes; unreadable function bodies return a controlled error', async () => {
+  const result = await fetch(base + tasksUrl, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: '{"text":"Cross-site task"}' });
+  assert.equal(result.status, 415);
+  const { HttpRequest } = require('@azure/functions');
+  const { createFunctionHandler } = require('../function-handler');
+  const handler = createFunctionHandler();
+  assert.equal((await handler(new HttpRequest({ url: 'https://example.test/api/employees/1007/tasks', method: 'POST', params: { path: 'employees/1007/tasks' }, headers: { 'Content-Type': 'text/plain' }, body: { string: '{"text":"Cross-site task"}' } }))).status, 415);
+  const broken = { method: 'POST', params: { path: 'employees/1007/tasks' }, headers: new Headers({ 'Content-Type': 'application/json' }), text: async () => { throw new Error('private body details'); } };
+  const response = await handler(broken);
+  assert.equal(response.status, 503);
+  assert(!JSON.stringify(response).includes('private body details'));
 });

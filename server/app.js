@@ -18,7 +18,7 @@ function createApp({ rateLimitMax = 120 } = {}) {
     res.status(ready ? 200 : 503).json({ status: ready ? 'ok' : 'unavailable' });
   });
   // A global limit avoids trusting visitor-supplied proxy headers.
-  // Intended for one F1 instance, not per-user production quotas.
+  // Local Express adapter; Azure uses the managed Functions handler.
   app.use('/api', rateLimit({
     windowMs: 60000, limit: rateLimitMax, keyGenerator: () => 'shared-demo',
     standardHeaders: 'draft-8', legacyHeaders: false,
@@ -26,6 +26,7 @@ function createApp({ rateLimitMax = 120 } = {}) {
   }));
   app.use('/api', (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store');
+    if (['POST', 'PUT'].includes(req.method) && !req.is('application/json')) return res.status(415).json({ err: 'Use JSON.' });
     next();
   });
   app.use(express.json({ limit: '16kb' }));
