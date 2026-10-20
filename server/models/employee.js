@@ -20,11 +20,11 @@ const Schema = mongoose.Schema;
  * collection: name of the collection in the database
  */
 let employeeSchema = new Schema({
-  empId: {type: Number, unique: true, required: true},
+  empId: {type: Number, required: true},
   firstName: { type: String },
   lastName: { type: String },
   todo: [itemSchema],
   done: [itemSchema]
-}, {collection: 'employees'})
+}, {collection: 'employees', optimisticConcurrency: true, autoCreate: false, autoIndex: false})
 
 module.exports = mongoose.model('Employee', employeeSchema);

@@ -10,21 +10,22 @@
 <div fxLayout="column" class="main-welcome">
   <div fxFlex>
   <h1 class="title">
-    Welcome to WEB 450's - nodebucket Project <br />
+    Nodebucket — shared demo <br />
     <span class="subtitle">
-      Enter a task below to get started. You may also drag and drop tasks to mark them as complete.
+      Add, move, and delete sample tasks. Everyone shares this board (50 tasks maximum). Do not enter personal information.
     </span>
   </h1>
 </div>
 
+<p *ngIf="errorMessage" role="alert">{{errorMessage}}</p>
 <div fxFlex>
   <div class="task-container mat-elevation-z4" fxLayout="column">
     <mat-card>
-      <form [formGroup]="taskForm" (ngSubmit)="createTask(); taskForm.reset();">
+      <form [formGroup]="taskForm" (ngSubmit)="createTask();">
         <mat-card-content>
           <mat-form-field appearance="fill" class="width-100">
-            <input type="text" matInput name="task" formControlName="task" placeholder="Enter a task name...">
-            <button type="submit" [disabled]="!taskForm.valid" mat-icon-button matSuffix>
+            <input type="text" matInput name="task" aria-label="Task name" formControlName="task" placeholder="Enter a task name...">
+            <button type="submit" aria-label="Add task" [disabled]="!taskForm.valid" mat-icon-button matSuffix>
               <mat-icon color="primary" style="width: 36px; height: 36px; font-size: 36px;">add_circle</mat-icon>
             </button>
           </mat-form-field>
@@ -32,11 +33,11 @@
           <mat-error *ngIf="taskForm.controls['task'].hasError('required') && taskForm.controls['task'].touched">Task is
             a required field</mat-error>
 
-          <mat-error *ngIf="taskForm.controls['task'].hasError('minLength') && taskForm.controls['task'].touched">Field
+          <mat-error *ngIf="taskForm.controls['task'].hasError('minlength') && taskForm.controls['task'].touched">Field
             must be at least 3 characters in length.</mat-error>
 
-          <mat-error *ngIf="taskForm.controls['task'].hasError('maxLength') && taskForm.controls['task'].touched">Field
-            cannot exceed 36 characters in length.</mat-error>
+          <mat-error *ngIf="taskForm.controls['task'].hasError('maxlength') && taskForm.controls['task'].touched">Field
+            cannot exceed 35 characters in length.</mat-error>
         </mat-card-content>
       </form>
     </mat-card>
@@ -74,7 +75,7 @@
 
                     <!-- code to delete task -->
                     <div fxFlex fxLayoutAlign="end" style="margin-top: -7px;">
-                      <button mat-icon-button (click)="deleteTask(item._id)">
+                      <button mat-icon-button [attr.aria-label]="'Delete ' + item.text" (click)="deleteTask(item._id)">
                         <mat-icon color="warn">delete</mat-icon>
                       </button>
                     </div>
@@ -113,7 +114,7 @@
 
                   <!-- code to delete task -->
                   <div fxFlex fxLayoutAlign="end" style="margin-top: -7px;">
-                    <button mat-icon-button (click)="deleteTask(item._id)">
+                    <button mat-icon-button [attr.aria-label]="'Delete ' + item.text" (click)="deleteTask(item._id)">
                       <mat-icon color="warn">delete</mat-icon>
                     </button>
                   </div>
