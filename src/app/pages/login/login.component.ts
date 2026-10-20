@@ -13,10 +13,11 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CookieService } from 'ngx-cookie-service';
 import { EmployeeService } from '../../shared/services/employee.service';
-import { Message } from 'primeng/api';
+import { ToastMessageOptions as Message } from 'primeng/api';
 import { Employee } from '../../shared/models/employee.interface';
 
 @Component({
+  standalone: false,
   selector: 'app-login',
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']

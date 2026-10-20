@@ -18,6 +18,7 @@ import {DialogData} from '../models/dialog-data.interface';
 
 
 @Component({
+  standalone: false,
   selector: 'app-confirm-dialog',
   templateUrl: './confirm-dialog.component.html',
   styleUrls: ['./confirm-dialog.component.css']
