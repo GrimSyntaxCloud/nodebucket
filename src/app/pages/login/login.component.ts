@@ -30,7 +30,7 @@ export class LoginComponent implements OnInit {
     /**
      * checks for numbers between 0-9
      */
-    empId: [null, Validators.compose([Validators.required, Validators.pattern('^[0-9]*$')])]
+    empId: [1007, Validators.compose([Validators.required, Validators.pattern('^[0-9]*$')])]
   });
 
   constructor(private fb: FormBuilder, private router: Router, private cookieService: CookieService,
@@ -67,7 +67,7 @@ export class LoginComponent implements OnInit {
       error: (e) => {
         console.log(e);
         this.errorMessages = [
-          { severity: 'error', summary: 'Error', detail: e.message }
+          { severity: 'error', summary: 'Error', detail: e.error?.err || "The demo is unavailable. Please try again shortly." }
         ]
       }
     })

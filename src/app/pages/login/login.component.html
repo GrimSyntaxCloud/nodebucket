@@ -11,11 +11,11 @@
   <mat-card>
     <mat-card-header>
       <mat-card-title class="card-header-color">
-        Employee sign-in Page
+        Try the Nodebucket demo
       </mat-card-title>
 
       <mat-card-subtitle >
-        You must enter a valid employee Id to continue: 1007 - 1012
+        Enter demo ID 1007. This board is shared by all visitors; use sample tasks only.
       </mat-card-subtitle>
     </mat-card-header>
 
@@ -27,7 +27,7 @@
 
           <mat-card-content class="mat-elevation-z0">
             <mat-form-field appearance="fill" style="width:100%;">
-              <input type="text" matInput formControlName="empId" placeholder="Employee ID">
+              <input type="text" matInput formControlName="empId" aria-label="Demo employee ID" placeholder="Employee ID">
 
               <mat-error
                 *ngIf="loginForm.controls['empId'].hasError('required') && loginForm.controls['empId'].touched">
@@ -45,7 +45,7 @@
 
     <mat-card-actions>
       <button type="submit" fxFlex mat-raised-button color="primary" style="height: 50px; font-size: 18px;"
-        [disabled]="!loginForm.valid" (click)="login();">Log in</button>
+        [disabled]="!loginForm.valid" (click)="login();">Open demo</button>
     </mat-card-actions>
   </mat-card>
 </div>

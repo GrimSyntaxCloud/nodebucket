@@ -1,5 +1,0 @@
-{
-  "dbconn": "mongodb+srv://nodebucket_user:s3cret@buwebdev-cluster-1.pldlt.mongodb.net/nodebucket?retryWrites=true&w=majority",
-  "serverError": "Internal Server Error",
-  "mongoServerError": "MongoDB Server Error"
-}

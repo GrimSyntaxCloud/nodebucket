@@ -1,160 +1,69 @@
-/**
-============================================
- Title: home.component.html
- Author: Andres Macias
- Date:   01/22/23
- Description: contains code for home component. Allows for adding tasks
-===========================================
- */
-import { ConfirmDialogComponent } from 'src/app/shared/confirm-dialog/confirm-dialog.component';
 import { Component, OnInit } from '@angular/core';
-import { TaskService } from 'src/app/shared/services/task.service';
-import { CookieService } from 'ngx-cookie-service';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-
+import { MatDialog } from '@angular/material/dialog';
+import { CookieService } from 'ngx-cookie-service';
+import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+import { TaskService } from '../../shared/services/task.service';
+import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dialog.component';
 import { Employee } from '../../shared/models/employee.interface';
 import { Item } from '../../shared/models/item.interface';
-import { MatDialog } from '@angular/material/dialog';
-import { DialogData } from '../../shared/models/dialog-data.interface';
-import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 
-@Component({
-  selector: 'app-home',
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.css']
-})
-
+@Component({ selector: 'app-home', templateUrl: './home.component.html', styleUrls: ['./home.component.css'] })
 export class HomeComponent implements OnInit {
-
-  //properties
-  employee: Employee;
-  todo: Item[];
-  done: Item[];
+  todo: Item[] = [];
+  done: Item[] = [];
   empId: number;
-  dialogData: DialogData;
-
+  errorMessage = '';
   taskForm: FormGroup = this.fb.group({
-    task: [null, Validators.compose([Validators.required, Validators.minLength(3), Validators.maxLength(35)])]
-  })
+    task: [null, [Validators.required, Validators.minLength(3), Validators.maxLength(35)]]
+  });
 
-  constructor(private taskService: TaskService, private cookieService: CookieService, private fb: FormBuilder, private dialog: MatDialog) {
-    this.employee = {} as Employee;
-    this.dialogData = {} as DialogData;
-
-    this.todo = [];
-    this.done = [];
-
-
-    this.empId = parseInt(this.cookieService.get('session_user'), 10);
-
+  constructor(private taskService: TaskService, cookieService: CookieService, private fb: FormBuilder, private dialog: MatDialog) {
+    this.empId = Number(cookieService.get('session_user'));
+  }
+  ngOnInit(): void { this.reload(); }
+  private apply(employee: Employee): void {
+    this.todo = employee.todo;
+    this.done = employee.done;
+  }
+  private reload(): void {
     this.taskService.findAllTasks(this.empId).subscribe({
-      next: (res) => {
-        this.employee = res;
-        console.log(this.employee);
-      },
-      error: (e) => {
-        console.log(e.message);
-      },
-      complete: () => {
-        this.todo = this.employee.todo;
-        this.done = this.employee.done;
-
-        console.log(this.todo);
-        console.log(this.done);
-      }
-    })
+      next: employee => this.apply(employee),
+      error: error => { this.errorMessage = error.error?.err || 'Could not load the board. Please try again.'; }
+    });
   }
-
-  ngOnInit(): void {
+  private failed(error: any): void {
+    this.errorMessage = error.error?.err || 'Could not save your change. Please try again.';
+    this.reload();
   }
-
-  createTask() {
-    const newTask = this.taskForm.controls['task'].value;
-
-    this.taskService.createTask(this.empId, newTask).subscribe({
-      next: (res) => {
-        this.employee = res;
-
-        console.log(this.employee);
-        console.log(res);
-      },
-      error: (e) => {
-        console.log(e.message);
-      },
-      complete: () => {
-        this.todo = this.employee.todo;
-        this.done = this.employee.done;
-
-        this.taskForm.controls['task'].setErrors({ 'incorrect': false });
-      }
-    })
+  createTask(): void {
+    if (this.taskForm.invalid) return;
+    this.errorMessage = '';
+    this.taskService.createTask(this.empId, this.taskForm.controls['task'].value).subscribe({
+      next: employee => { this.apply(employee); this.taskForm.reset(); },
+      error: error => this.failed(error)
+    });
   }
-
-  deleteTask(taskId: string) {
-    this.dialogData.header = 'Delete Record Dialog';
-    this.dialogData.content = 'Are you sure you want to delete this task?';
-
-    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
-      data: this.dialogData,
-      disableClose: true
-    })
-
-    dialogRef.afterClosed().subscribe({
-      next: (result) => {
-        console.log(result)
-
-        if (result === 'confirm') {
-          this.taskService.deleteTask(this.empId, taskId).subscribe({
-            next: (res) => {
-              this.employee = res;
-            },
-            error: (e) => {
-              console.log(e)
-            },
-            complete: () => {
-              this.todo = this.employee.todo;
-              this.done = this.employee.done;
-            }
-          })
-        }
-      }
-    })
+  deleteTask(taskId: string): void {
+    this.dialog.open(ConfirmDialogComponent, {
+      data: { header: 'Delete task', content: 'Remove this task from the shared demo board?' }, disableClose: true
+    }).afterClosed().subscribe(result => {
+      if (result !== 'confirm') return;
+      this.errorMessage = '';
+      this.taskService.deleteTask(this.empId, taskId).subscribe({
+        next: employee => this.apply(employee), error: error => this.failed(error)
+      });
+    });
   }
-
-
-  drop(event: CdkDragDrop<any[]>) {
+  drop(event: CdkDragDrop<Item[]>): void {
+    this.errorMessage = '';
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
-
-      // console.log
-      console.log('Item reordered in the same column');
-
-      this.updateTaskList(this.empId, this.todo, this.done);
-
     } else {
-      console.log('Item moved to the other column')
-
-      transferArrayItem(event.previousContainer.data,
-        event.container.data,
-        event.previousIndex,
-        event.currentIndex)
-
-      this.updateTaskList(this.empId, this.todo, this.done);
+      transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
     }
+    this.taskService.updateTask(this.empId, this.todo, this.done).subscribe({
+      next: employee => this.apply(employee), error: error => this.failed(error)
+    });
   }
-
-  updateTaskList(empId: number, todo: Item[], done: Item[]) {
-    this.taskService.updateTask(empId, todo, done).subscribe({
-      next: (res) => {
-        this.employee = res;
-      },
-      error: (e) => {
-        console.log(e);
-      },
-      complete: () => {
-        this.todo = this.employee.todo;
-        this.done = this.employee.done
-      }
-    })
-}
 }

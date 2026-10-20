@@ -1,380 +1,66 @@
-/*
-============================================
- Title: employee.js
- Author: Andres Macias
- Date:   01/16/23
- Description: contains api for employees
-===========================================
-*/
-
-/**
- * API Details: 
- */
 const express = require('express');
 const Employee = require('../models/employee');
-const config = require('../data/config.json');
+const { DEMO_ID } = require('../database');
 const router = express.Router();
+const MAX_TASKS = 50;
+const objectIdPattern = /^[a-f0-9]{24}$/;
+const validText = text => typeof text === 'string' && text.trim().length >= 3 && text.trim().length <= 35;
 
-
-
-/**
-* openapi: 3.0.0
-* @openapi
-* /api/employees/{empId}:
-*    get:
-*       summary: returns a employee object
-*       description: API for returning a single employee object from MongoDB
-*       operationId: findEmployeeById
-*       parameters:
-*         - name: empId
-*           description: The employee requested by the user
-*           in: path
-*           schema:
-*             type: number
-*           required: true
-*       responses:
-*         '200':
-*           description: Composer document
-*         '500':
-*           description: Server Exception
-*         '501':
-*           description: MongoDB Exception
-*/
-router.get('/:empId', async (req, res) => {
-  try {
-    Employee.findOne({ 'empId': req.params.empId }, function (err, emp) {
-      /**
-       * if there is a mongodb error, handle it and return a 501 error message
-       */
-      if (err) {
-        console.log(err);
-        res.status(501).send({
-          'err': config.mongoServerError + ": " + err.message
-        })
-      }
-      /**
-       * if there is no error, return the emp object from mongoDB
-      */
-      else {
-        console.log(emp);
-        res.json(emp); // returns the data as JSON
-      }
-    })
-  }
-  /**
-   * For any potential errors
-   */
-  catch (e) {
-    console.log(e);
-    res.status(500).send({
-      'err': config.serverError + ": " + err.message
-    })
-  }
-})
-
-
-/**
-* openapi: 3.0.0
-* @openapi
-* /api/employees/{empId}/tasks:
-*    get:
-*       summary: returns a employee objects tasks
-*       description: API for returning a single employees tasks from MongoDB
-*       operationId: findAllTasks
-*       parameters:
-*         - name: empId
-*           description: The employee requested by the user
-*           in: path
-*           schema:
-*             type: number
-*           required: true
-*       responses:
-*         '200':
-*           description: Composer document
-*         '500':
-*           description: Server Exception
-*         '501':
-*           description: MongoDB Exception
-*/
-/**
- * findAllTasks
- */
-
-router.get('/:empId/tasks', async (req, res) => {
-  try {
-    Employee.findOne({ 'empId': req.params.empId }, 'empId todo done', function (err, emp) {
-      if (err) {
-        console.log(err);
-        res.status(501).send({
-          'err': config.mongoServerError + ": " + err.message
-        })
-      }
-      else {
-        console.log(emp);
-        res.json(emp); // returns the data as JSON
-      }
-    })
-  }
-  catch (e) {
-    console.log(e);
-    res.status(500).send({
-      'err': config.serverError + ": " + err.message
-    })
-  }
-})
-
-/**
-* openapi: 3.0.0
-* @openapi
-* /api/employees/{empId}/tasks:
-*    post:
-*       summary: adds a task to an employee document
-*       description: API for creating a task for an employee
-*       operationId: createTask
-*       parameters:
-*         - name: empId
-*           description: The employee requested by the user
-*           in: path
-*           schema:
-*             type: number
-*           required: true
-*       responses:
-*         '200':
-*           description: Composer document
-*         '500':
-*           description: Server Exception
-*         '501':
-*           description: MongoDB Exception
-*/
-
-
-/**
- * createTask
- */
+router.param('empId', (req, res, next, empId) => {
+  if (empId !== '1007') return res.status(404).json({ err: 'Use demo employee ID 1007.' });
+  next();
+});
+async function getDemo(res) {
+  const employee = await Employee.findById(DEMO_ID);
+  if (!employee) res.status(503).json({ err: 'The demo is being prepared. Please try again.' });
+  return employee;
+}
+router.get(['/:empId', '/:empId/tasks'], async (req, res) => {
+  const employee = await getDemo(res);
+  if (employee) res.json(employee);
+});
 router.post('/:empId/tasks', async (req, res) => {
-  try {
-    Employee.findOne({ 'empId': req.params.empId }, function (err, emp) {
-      if (err) {
-        console.log(err);
-        res.status(501).send({
-          'err': config.mongoServerError + ": " + err.message
-        })
-      }
-      else {
-        console.log(emp);
-        /**
-         * if the response is not null, then add new task
-         * else handle error
-         */
-        if (emp) {
-          const newTask = {
-            text: req.body.text
-          }
-
-          emp.todo.push(newTask);
-
-          emp.save(function (err, updatedEmp) {
-            if (err) {
-              console.log(err);
-              res.status(501).send({
-                'err': config.mongoServerError + ': ' + err.message
-              })
-            } else {
-              console.log(updatedEmp);
-              res.json(updatedEmp);
-            }
-          })
-        }
-        else {
-          res.status(401).send({
-            'err': 'EmployeeId: ' + req.params.empId + ' does not belong to a registered user.'
-          })
-        }
-      }
-    })
-  } catch (e) {
-    console.log(e);
-    res.status(500).send({
-      'err': config.serverError + ": " + err.message
-    })
+  if (!validText(req.body?.text)) return res.status(400).json({ err: 'Task names must contain 3–35 characters.' });
+  const employee = await getDemo(res);
+  if (!employee) return;
+  if (employee.todo.length + employee.done.length >= MAX_TASKS) {
+    return res.status(409).json({ err: 'This shared demo holds 50 tasks. Delete a task before adding another.' });
   }
+  employee.todo.push({ text: req.body.text.trim() });
+  // Optimistic concurrency prevents simultaneous additions exceeding the cap.
+  await employee.save();
+  res.status(201).json(employee);
 });
-
-/**
-* openapi: 3.0.0
-* @openapi
-* /api/employees/{empId}/tasks:
-*    put:
-*       summary: updates tasks to an employee document
-*       description: API for updating tasks for an employee
-*       operationId: updateTask
-*       parameters:
-*         - name: empId
-*           description: The employee requested by the user
-*           in: path
-*           schema:
-*             type: number
-*           required: true
-*       responses:
-*         '200':
-*           description: Composer document
-*         '500':
-*           description: Server Exception
-*         '501':
-*           description: MongoDB Exception
-*/
-
-/**
- * updateTask
- */
 router.put('/:empId/tasks', async (req, res) => {
-  try {
-    Employee.findOne({ 'empId': req.params.empId }, function (err, emp) {
-      if (err) {
-        console.log(err);
-        res.status(501).send({
-          'err': 'MongoDb server error: ' + ": " + err.message
-        })
-      }
-      else {
-        console.log(emp);
-
-        if (emp) {
-          emp.set({
-            todo: req.body.todo,
-            done: req.body.done
-          });
-
-          emp.save(function (err, updatedEmp) {
-            if (err) {
-              console.log(err);
-              res.status(501).send({
-                'err': 'MongoDB server error: ' + err.message
-              })
-            } else {
-              console.log(updatedEmp);
-              res.json(updatedEmp);
-            }
-          });
-        }
-        else {
-          console.log('no Employee matching the passed in empId: ' + req.params.empId);
-          res.status(401).send({
-            'err': 'EmployeeId: ' + req.params.empId + ' does not belong to a registered user.'
-          })
-        }
-
-      }
-    })
-  } catch (e) {
-    console.log(e);
-    res.status(500).send({
-      'err': config.serverError + ": " + err.message
-    })
+  const { todo, done } = req.body || {};
+  if (!Array.isArray(todo) || !Array.isArray(done) || todo.length + done.length > MAX_TASKS) {
+    return res.status(400).json({ err: 'Provide valid task lists with at most 50 tasks.' });
   }
+  const tasks = [...todo, ...done];
+  if (tasks.some(task => !task || !objectIdPattern.test(task._id) || !validText(task.text))) {
+    return res.status(400).json({ err: 'Invalid task.' });
+  }
+  const employee = await getDemo(res);
+  if (!employee) return;
+  const existing = new Map([...employee.todo, ...employee.done].map(task => [String(task._id), task.text]));
+  const ids = new Set(tasks.map(task => task._id));
+  if (ids.size !== tasks.length || ids.size !== existing.size || tasks.some(task => existing.get(task._id) !== task.text)) {
+    return res.status(409).json({ err: 'The shared board changed. Reloaded the latest tasks; please try again.' });
+  }
+  // Reorder/move only; cannot inject records or erase new tasks.
+  employee.todo = todo.map(({ _id, text }) => ({ _id, text }));
+  employee.done = done.map(({ _id, text }) => ({ _id, text }));
+  await employee.save();
+  res.json(employee);
 });
-
-/**
-* openapi: 3.0.0
-* @openapi
-* /api/employees/{empId}/tasks/{taskId}:
-*    delete:
-*       summary: removes a task to an employee document
-*       description: API for deleting a task for an employee
-*       operationId: deleteTask
-*       parameters:
-*         - name: empId
-*           description: The employee requested by the user
-*           in: path
-*           schema:
-*             type: number
-*           required: true
-*         - name: taskId
-*           description: The id of the task to be deleted
-*           in: path
-*           schema:
-*           type: String
-*       responses:
-*         '200':
-*           description: Composer document
-*         '500':
-*           description: Server Exception
-*         '501':
-*           description: MongoDB Exception
-*/
-
-/**
- * deleteTask
- */
-
 router.delete('/:empId/tasks/:taskId', async (req, res) => {
-  try {
-    Employee.findOne({ 'empId': req.params.empId }, function (err, emp) {
-      if (err) {
-        console.log(err);
-        res.status(501).send({
-          'err': 'MongoDb server error: ' + ": " + err.message
-        })
-      }
-      else {
-        console.log(emp);
-
-        if (emp) {
-          const taskId = req.params.taskId;
-
-          const todoItem = emp.todo.find(item => item._id.toString() === taskId);
-          const doneItem = emp.done.find(item => item._id.toString() === taskId);
-
-          if (todoItem) {
-            emp.todo.id(todoItem._id).remove();
-
-            emp.save(function (err, updatedTodoItemEmp) {
-              if (err) {
-                console.log(err);
-                res.status(501).send({
-                  'err': 'MongoDB server error: ' + err.message
-                })
-              } else {
-                console.log(updatedTodoItemEmp);
-                res.json(updatedTodoItemEmp);
-              }
-            })
-          } else if (doneItem) {
-              emp.done.id(doneItem._id).remove();
-
-              emp.save(function (err, updatedDoneItemEmp) {
-                if (err) {
-                  console.log(err);
-                  res.status(501).send({
-                    'err': 'MongoDB server error: ' + err.message
-                  })
-                } else {
-                  console.log(updatedDoneItemEmp);
-                  res.json(updatedDoneItemEmp);
-                }
-              })
-
-          } else {
-            console.log('Invalid taskId: ' + taskId);
-            res.status(401).send({
-              'err': 'Invalid taskId: ' + taskId
-            })
-          }
-        }
-        else {
-          console.log('no Employee matching the passed in empId: ' + req.params.empId);
-          res.status(501).send({
-            'err': 'EmployeeId: ' + req.params.empId + ' does not belong to a registered user.'
-          })
-        }
-      }
-    })
-  } catch (e) {
-    console.log(e);
-    res.status(500).send({
-      'err': config.serverError + ": " + err.message
-    })
-  }
+  if (!objectIdPattern.test(req.params.taskId)) return res.status(400).json({ err: 'Invalid task ID.' });
+  const employee = await getDemo(res);
+  if (!employee) return;
+  const task = employee.todo.id(req.params.taskId) || employee.done.id(req.params.taskId);
+  if (!task) return res.status(404).json({ err: 'That task was already removed.' });
+  task.deleteOne();
+  await employee.save();
+  res.json(employee);
 });
-
 module.exports = router;

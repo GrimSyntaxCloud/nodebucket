@@ -1,27 +1,64 @@
 # Nodebucket
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 14.0.5.
+An Angular task board with an Express/Node.js backend and MongoDB-compatible
+storage. Originally built as WEB 450 coursework by Andres Macias.
 
-## Development server
+The Azure version is a **shared public demo**: enter **1007** to add, move and
+remove sample tasks. All visitors share the same board. This is not a private
+account system; do not enter personal information.
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+## Status
 
-## Code scaffolding
+Azure deployment is prepared but disabled until the owner completes Azure signup,
+provisions the free resources, and sets the repository variables. No Azure demo
+URL is claimed until the live database and browser checks pass.
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+## Local development
 
-## Build
+Use Node 22 (`.nvmrc`):
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+```sh
+npm ci
+npm ci --prefix server
+npm run build
+node server/test/preview.cjs
+```
 
-## Running unit tests
+The preview runs at `http://127.0.0.1:3107` using a disposable local MongoDB
+instance. It downloads a MongoDB test binary on first use and deletes the local
+database on shutdown. It never connects to Azure or the original database.
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+For an existing local MongoDB database, copy `.env.example` to `.env`, set its
+connection string, create the `employees` collection, and run `npm run dev`.
+The server seeds one demo document without overwriting its tasks on restart.
 
-## Running end-to-end tests
+## Verification and packaging
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+```sh
+npm run test:server
+npm run build
+npm run package
+```
 
-## Further help
+The package contains the built frontend and the independently locked production
+backend. Angular build tooling, test databases, credentials and Git history are
+excluded. Integration tests cover persistent task operations, malformed requests,
+concurrent edits, task limits, and request throttling.
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+The Angular 14 frontend remains legacy code; a successful Node 22 build does not
+make it an officially supported Angular version. See the setup guide for limits.
+
+## Azure setup and deployment
+
+Read [the setup guide](docs/azure-setup.md) for the account handoff, billing
+boundaries, provisioning, GitHub variables, and live verification checklist.
+
+- Azure App Service **F1 / Free**, Node 22, single instance.
+- Cosmos DB **MongoDB API**, free tier enabled, one region, one 400 RU/s collection,
+  1,000 RU/s account cap.
+- GitHub Actions tests and builds pull requests. Deployment requires an explicitly
+  enabled variable and the `azure` environment; it uses short-lived OIDC tokens.
+- No Azure resources are created by CI. Infrastructure provisioning is separate.
+
+The original database config was removed from current code. Rotate any old
+credentials that were committed; the old values remain in Git history.
