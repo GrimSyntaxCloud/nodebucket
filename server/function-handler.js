@@ -24,14 +24,15 @@ function createFunctionHandler({ prepare = ensureDatabase, limit = 120, now = Da
     if (++requests > limit) return response({ status: 429, jsonBody: { err: 'The demo is busy. Please try again in a minute.' } });
     const path = '/' + (request.params.path || '');
     let body;
-    if (request.method === 'POST' || request.method === 'PUT') {
-      if (Number(request.headers.get('content-length')) > 16384) return response({ status: 413, jsonBody: { err: 'Request is too large.' } });
-      const raw = await request.text();
-      if (Buffer.byteLength(raw) > 16384) return response({ status: 413, jsonBody: { err: 'Request is too large.' } });
-      try { body = JSON.parse(raw); }
-      catch { return response({ status: 400, jsonBody: { err: 'Invalid JSON.' } }); }
-    }
     try {
+      if (request.method === 'POST' || request.method === 'PUT') {
+        if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) return response({ status: 415, jsonBody: { err: 'Use JSON.' } });
+        if (Number(request.headers.get('content-length')) > 16384) return response({ status: 413, jsonBody: { err: 'Request is too large.' } });
+        const raw = await request.text();
+        if (Buffer.byteLength(raw) > 16384) return response({ status: 413, jsonBody: { err: 'Request is too large.' } });
+        try { body = JSON.parse(raw); }
+        catch { return response({ status: 400, jsonBody: { err: 'Invalid JSON.' } }); }
+      }
       await prepare();
       if (path === '/health' && request.method === 'GET') {
         // A real ping checks Cosmos, rather than trusting a cached connection state.

@@ -18,7 +18,8 @@ VM, separate Function App, or separate function storage account.
   Preview deployments are disabled. Included bandwidth is 100 GB per subscription
   per month, with no overage bandwidth on Free.
 - Cosmos has **free tier enabled**, **one region**, a **1,000 RU/s account cap**,
-  and **one collection at 400 RU/s**. It uses provisioned throughput, not serverless.
+  and **the Nodebucket collection at 400 RU/s**. The same account also hosts
+  BCRS at 400 RU/s, for an aggregate 800 RU/s. It uses provisioned throughput, not serverless.
 - Cosmos's ongoing free allowance is 1,000 RU/s and 25 GB for the account. Do not
   add databases, regions, throughput, or extra retained backups without reviewing
   the aggregate cost. The app stores one fixed demo document with at most 50 tasks.
@@ -99,7 +100,7 @@ This is a **shared public board**, not an authentication system. Employee ID 100
 and browser cookies only open the demo. Everyone can see and change its sample
 tasks. Do not store personal information. Real accounts need a separate design.
 
-The API validates input, limits task storage, uses optimistic concurrency, and
+The API validates input, limits task storage, rejects stale browser versions, uses optimistic concurrency at save time, and
 throttles requests per warm Functions instance. This is not an account-wide rate
 limit; Cosmos's provisioned throughput cap remains independent of API scaling.
 

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormGroupDirective, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { CookieService } from 'ngx-cookie-service';
 import { CdkDragDrop, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
@@ -14,6 +14,8 @@ export class HomeComponent implements OnInit {
   done: Item[] = [];
   empId: number;
   errorMessage = '';
+  busy = true;
+  private version = 0;
   taskForm: FormGroup = this.fb.group({
     task: [null, [Validators.required, Validators.minLength(3), Validators.maxLength(35)]]
   });
@@ -23,32 +25,38 @@ export class HomeComponent implements OnInit {
   }
   ngOnInit(): void { this.reload(); }
   private apply(employee: Employee): void {
+    this.version = employee.__v;
     this.todo = employee.todo;
     this.done = employee.done;
+    this.busy = false;
   }
   private reload(): void {
+    this.busy = true;
     this.taskService.findAllTasks(this.empId).subscribe({
       next: employee => this.apply(employee),
-      error: error => { this.errorMessage = error.error?.err || 'Could not load the board. Please try again.'; }
+      error: error => { this.busy = false; this.errorMessage = error.error?.err || 'Could not load the board. Please try again.'; }
     });
   }
   private failed(error: any): void {
     this.errorMessage = error.error?.err || 'Could not save your change. Please try again.';
     this.reload();
   }
-  createTask(): void {
-    if (this.taskForm.invalid) return;
+  createTask(form?: FormGroupDirective): void {
+    if (this.busy || this.taskForm.invalid) return;
+    this.busy = true;
     this.errorMessage = '';
     this.taskService.createTask(this.empId, this.taskForm.controls['task'].value).subscribe({
-      next: employee => { this.apply(employee); this.taskForm.reset(); },
+      next: employee => { this.apply(employee); if (form) form.resetForm(); else this.taskForm.reset(); },
       error: error => this.failed(error)
     });
   }
   deleteTask(taskId: string): void {
+    if (this.busy) return;
+    this.busy = true;
     this.dialog.open(ConfirmDialogComponent, {
       data: { header: 'Delete task', content: 'Remove this task from the shared demo board?' }, disableClose: true
     }).afterClosed().subscribe(result => {
-      if (result !== 'confirm') return;
+      if (result !== 'confirm') { this.busy = false; return; }
       this.errorMessage = '';
       this.taskService.deleteTask(this.empId, taskId).subscribe({
         next: employee => this.apply(employee), error: error => this.failed(error)
@@ -56,13 +64,15 @@ export class HomeComponent implements OnInit {
     });
   }
   drop(event: CdkDragDrop<Item[]>): void {
+    if (this.busy) return;
+    this.busy = true;
     this.errorMessage = '';
     if (event.previousContainer === event.container) {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
     } else {
       transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
     }
-    this.taskService.updateTask(this.empId, this.todo, this.done).subscribe({
+    this.taskService.updateTask(this.empId, this.todo, this.done, this.version).subscribe({
       next: employee => this.apply(employee), error: error => this.failed(error)
     });
   }
