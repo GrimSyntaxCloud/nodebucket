@@ -6,10 +6,10 @@
  Description: contains code for base template. Navigation, footer
 ===========================================
 -->
-<div class="main-container" fxLayout="column">
+<div class="layout-column main-container">
 
   <!-- navigation -->
-  <nav fxFlex >
+  <nav  class="flex-grow">
     <mat-toolbar color="primary">
       <!-- navbar container -->
       <div class="navbar-container" >
@@ -19,20 +19,20 @@
         <button class="navbar-link" routerLink='/about' mat-button>About</button>
         <button class="navbar-link" routerLink='/contact' mat-button>Contact Us</button>
       </div>
-      <div fxFlex></div>
+      <div class="flex-grow"></div>
       <button (click)="logout();" mat-button class="navbar-link">Log out</button>
     </mat-toolbar>
   </nav>
 
   <!-- main content -->
-  <div fxFlex>
-    <main class="main-content" fxFlex="100%;">
+  <div class="flex-grow">
+    <main class="flex-full main-content">
       <router-outlet></router-outlet>
     </main>
   </div>
 
   <!-- footer -->
-  <div fxFlex>
+  <div class="flex-grow">
     <footer class="footer">
       <mat-toolbar color="primary" class="footer-content">
         <p>

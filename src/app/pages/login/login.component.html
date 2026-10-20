@@ -7,7 +7,7 @@
 ===========================================
 -->
 
-<div fxLayout="column" class="center">
+<div class="layout-column center">
   <mat-card>
     <mat-card-header>
       <mat-card-title class="card-header-color">
@@ -20,9 +20,9 @@
     </mat-card-header>
 
     <mat-card-content>
-      <p-messages [(value)]="errorMessages" [enableService]="false"></p-messages>
+      <app-messages [(value)]="errorMessages" [enableService]="false"></app-messages>
 
-      <mat-card class="mat-elevation-z0" fxLayout="column" fxLayoutGap="10px">
+      <mat-card class="layout-column gap-10 mat-elevation-z0">
         <form [formGroup]="loginForm" (ngSubmit)="login(); loginForm.reset();">
 
           <mat-card-content class="mat-elevation-z0">
@@ -44,8 +44,8 @@
     </mat-card-content>
 
     <mat-card-actions>
-      <button type="submit" fxFlex mat-raised-button color="primary" style="height: 50px; font-size: 18px;"
-        [disabled]="!loginForm.valid" (click)="login();">Open demo</button>
+      <button type="submit" mat-raised-button color="primary" style="height: 50px; font-size: 18px;"
+        [disabled]="!loginForm.valid" (click)="login();" class="flex-grow">Open demo</button>
     </mat-card-actions>
   </mat-card>
 </div>

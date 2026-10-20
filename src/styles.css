@@ -2,3 +2,29 @@
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/* Native CSS replacement for the retired Angular Flex Layout directives. */
+.layout-row, .layout-column, .layout-row-wrap, .align-end {
+  display: flex;
+  box-sizing: border-box;
+}
+.layout-row { flex-direction: row; }
+.layout-column { flex-direction: column; }
+.layout-row-wrap { flex-flow: row wrap; }
+.flex-grow { flex: 1 1 0%; min-width: 0; }
+.flex-half { flex: 1 1 50%; max-width: 50%; }
+.flex-full { flex: 1 1 100%; }
+.align-center-center { justify-content: center; align-items: center; }
+.align-center-start { justify-content: center; align-items: flex-start; }
+.align-end { justify-content: flex-end; }
+.gap-10 { gap: 10px; }
+.gap-12 { gap: 12px; }
+.gap-15 { gap: 15px; }
+.gap-16 { gap: 16px; }
+.gap-20 { gap: 20px; }
+@media (max-width: 599px) {
+  .layout-xs-column { flex-direction: column; }
+}
+@media (min-width: 960px) {
+  .flex-gt-sm-55 { flex: 1 1 55%; max-width: 55%; }
+}

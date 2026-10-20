@@ -26,7 +26,7 @@ Angular browser app → /api → Node.js Azure Functions → Cosmos DB (MongoDB 
                               ↳ Express adapter for local development
 ```
 
-- **Frontend:** Angular 14, TypeScript, Angular Material, and CDK drag-and-drop.
+- **Frontend:** Angular 21 (LTS), TypeScript, Angular Material, and CDK drag-and-drop.
   Angular services load tasks and send create, move/reorder, and delete requests.
 - **API:** `server/tasks.js` implements the task operations shared by the local
   Express adapter and the deployed Azure Functions adapter. Only the fixed demo
@@ -58,7 +58,7 @@ deploys `main` when the deployment variable and secret are configured.
 
 ## Local development
 
-Use Node 22 (`.nvmrc`):
+Use Node 22.12 or newer within Node 22 (`.nvmrc`):
 
 ```sh
 npm ci
@@ -78,6 +78,8 @@ The server seeds one demo document without overwriting its tasks on restart.
 ## Verification and packaging
 
 ```sh
+npm audit
+npm audit --prefix server
 npm run test:server
 npm run test:ui
 npm run build
@@ -88,13 +90,24 @@ The package contains the built frontend and the independently locked production
 backend. Angular build tooling, test databases, credentials and Git history are
 excluded. Integration tests cover persistent task operations, malformed requests,
 concurrent edits (including stale browser tabs), task limits, JSON validation,
-and request throttling. Browser tests cover opening the demo, submitting board
-versions, and preventing duplicate saves. Browser tests require Chrome/Chromium.
+and request throttling. Vitest tests cover opening the demo, submitting board
+versions, preventing duplicate saves, and real Angular/Material/PrimeNG template
+rendering. Tests use jsdom; Chrome is not required.
 
-The Angular 14 frontend has outstanding dependency advisories; a successful
-Node 22 build does not make it a supported or fully patched framework. Upgrading
-Angular and its UI libraries remains separate modernization work. The deployed
-API has its own dependency lockfile. See the setup guide for limits.
+Angular 21 and its UI libraries use patched, locked dependencies. CI audits the
+complete frontend toolchain and the independently locked API. A clean audit covers
+known dependency advisories, not every possible application vulnerability. See
+the setup guide for limits.
+
+## Framework maintenance
+
+The frontend uses Angular 21.2, Material/CDK 21.2, PrimeNG 21, TypeScript 5.9,
+and Angular’s application builder. Native CSS replaces retired Flex Layout.
+NgModules, zone-based updates, the original routes, and the existing API remain.
+The build output stays in `dist/nodebucket`, preserving local and Azure packaging.
+
+The npm overrides pin Vite 7.3.7 and the Angular CLI’s MCP SDK 1.32.1 to
+patched compatible versions. Recheck those overrides when upgrading the CLI.
 
 ## Azure setup and deployment
 

@@ -8,7 +8,8 @@ import { ConfirmDialogComponent } from '../../shared/confirm-dialog/confirm-dial
 import { Employee } from '../../shared/models/employee.interface';
 import { Item } from '../../shared/models/item.interface';
 
-@Component({ selector: 'app-home', templateUrl: './home.component.html', styleUrls: ['./home.component.css'] })
+@Component({
+  standalone: false, selector: 'app-home', templateUrl: './home.component.html', styleUrls: ['./home.component.css'] })
 export class HomeComponent implements OnInit {
   todo: Item[] = [];
   done: Item[] = [];

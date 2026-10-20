@@ -7,8 +7,8 @@
 ===========================================
 -->
 
-<div fxLayout="column" class="main-welcome">
-  <div fxFlex>
+<div class="layout-column main-welcome">
+  <div class="flex-grow">
   <h1 class="title">
     Nodebucket — shared demo <br />
     <span class="subtitle">
@@ -18,8 +18,8 @@
 </div>
 
 <p *ngIf="errorMessage" role="alert">{{errorMessage}}</p>
-<div fxFlex>
-  <div class="task-container mat-elevation-z4" fxLayout="column">
+<div class="flex-grow">
+  <div class="layout-column task-container mat-elevation-z4">
     <mat-card>
       <form [formGroup]="taskForm" #taskFormDirective="ngForm" (ngSubmit)="createTask(taskFormDirective)">
         <mat-card-content>
@@ -45,18 +45,16 @@
 </div>
 
 <!-- list of tasks -->
-<div fxFlex>
-  <div fxLayout="row" fxLayout.xs="column" fxLayoutGap="15px" class="task-container" style="margin-top: 20px">
+<div class="flex-grow">
+  <div class="layout-row layout-xs-column gap-15 task-container" style="margin-top: 20px">
 
     <!-- todo column -->
-    <div fxFlex>
+    <div class="flex-grow">
       <mat-card class="mat-elevation-z0">
         <mat-card-title>Todo</mat-card-title>
         <mat-card-content>
           <div
-          fxLayout="column"
-          fxLayoutGap="10px"
-          class="task-column"
+          class="layout-column gap-10 task-column"
           cdkDropList
           [cdkDropListDisabled]="busy"
           #todoList="cdkDropList"
@@ -68,14 +66,14 @@
 
               <mat-card class="mat-elevation-z0 task-card">
                 <mat-card-content>
-                  <div fxLayout="row">
+                  <div class="layout-row">
                     <!-- text value -->
-                    <div fxFlex>
+                    <div class="flex-grow">
                       {{item.text}}
                     </div>
 
                     <!-- code to delete task -->
-                    <div fxFlex fxLayoutAlign="end" style="margin-top: -7px;">
+                    <div style="margin-top: -7px;" class="flex-grow align-end">
                       <button mat-icon-button [disabled]="busy" [attr.aria-label]="'Delete ' + item.text" (click)="deleteTask(item._id)">
                         <mat-icon color="warn">delete</mat-icon>
                       </button>
@@ -91,14 +89,12 @@
 
 
     <!-- done column -->
-    <div fxFlex>
+    <div class="flex-grow">
       <mat-card class="mat-elevation-z0">
         <mat-card-title>Done</mat-card-title>
         <mat-card-content>
           <div
-            fxLayout="column"
-            fxLayoutGap="10px"
-            class="task-column"
+            class="layout-column gap-10 task-column"
             cdkDropList
           [cdkDropListDisabled]="busy"
             #doneList="cdkDropList"
@@ -109,13 +105,13 @@
             <div *ngFor="let item of done" cdkDrag>
 
               <mat-card class="mat-elevation-z0 task-card">
-                <div fxLayout="row">
-                  <div fxFlex>
+                <div class="layout-row">
+                  <div class="flex-grow">
                     {{item.text}}
                   </div>
 
                   <!-- code to delete task -->
-                  <div fxFlex fxLayoutAlign="end" style="margin-top: -7px;">
+                  <div style="margin-top: -7px;" class="flex-grow align-end">
                     <button mat-icon-button [disabled]="busy" [attr.aria-label]="'Delete ' + item.text" (click)="deleteTask(item._id)">
                       <mat-icon color="warn">delete</mat-icon>
                     </button>

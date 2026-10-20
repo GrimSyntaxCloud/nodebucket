@@ -30,6 +30,8 @@ jobs:
             server/package-lock.json
       - run: npm ci
       - run: npm ci --prefix server
+      - run: npm audit --audit-level=low
+      - run: npm audit --prefix server --audit-level=low
       - run: npm run test:server
       - run: npm run test:ui
       - run: npm run build

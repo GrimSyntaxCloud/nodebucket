@@ -104,9 +104,9 @@ The API validates input, limits task storage, rejects stale browser versions, us
 throttles requests per warm Functions instance. This is not an account-wide rate
 limit; Cosmos's provisioned throughput cap remains independent of API scaling.
 
-Angular 14 remains legacy code. A successful Node 22 build is a compatibility
-check, not an official Angular 14 support guarantee. The backend has its own
-modern, locked dependencies. Framework modernization is separate work.
+The frontend uses Angular 21 LTS and compatible UI libraries on Node 22.12+.
+Vitest checks run without Chrome. CI audits both dependency lockfiles, runs tests,
+and builds the existing Azure package before deployment.
 
 The original `server/data/config.json` contained database credentials. It is
 removed from current code, but old values remain in Git history. Rotate any still
