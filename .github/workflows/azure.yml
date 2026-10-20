@@ -63,6 +63,20 @@ jobs:
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       - uses: azure/webapps-deploy@v3
+        id: webapp
         with:
           app-name: ${{ vars.AZURE_WEBAPP_NAME }}
           package: nodebucket.zip
+      - name: Verify the deployed app can reach Cosmos DB
+        env:
+          APP_URL: ${{ steps.webapp.outputs.webapp-url }}
+        run: |
+          app_base="${APP_URL%/}"
+          for attempt in $(seq 1 24); do
+            if curl --fail --silent --show-error --max-time 10 "$app_base/health"; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "The deployed app did not become healthy."
+          exit 1
