@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Employee = require('./models/employee');
-const DEMO_ID = '000000000000000000001007';
+const { DEMO_ID, SEED_TASK_ID } = require('./retention');
 
 async function connectDatabase(uri = process.env.MONGODB_URI) {
   if (!uri) throw new Error('MONGODB_URI is required.');
@@ -16,7 +16,7 @@ async function seedDemo() {
   await Employee.updateOne({ _id: DEMO_ID }, {
     $setOnInsert: {
       empId: 1007, firstName: 'Demo', lastName: 'Visitor', __v: 0,
-      todo: [{ text: 'Try moving this task to Done' }], done: [],
+      todo: [{ _id: SEED_TASK_ID, text: 'Try moving this task to Done', isDemo: true }], done: [],
     },
   }, { upsert: true });
 }

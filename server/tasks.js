@@ -1,12 +1,14 @@
 const Employee = require('./models/employee');
 const { DEMO_ID } = require('./database');
+const { cleanup, RETENTION_MS } = require('./retention');
 const MAX_TASKS = 50;
 const objectIdPattern = /^[a-f0-9]{24}$/;
 const validText = text => typeof text === 'string' && text.trim().length >= 3 && text.trim().length <= 35;
 const reply = (status, jsonBody) => ({ status, jsonBody });
 const fail = (status, err) => reply(status, { err });
 
-async function handleTasks(method, path, body) {
+async function handleTasks(method, path, body, time = Date.now()) {
+  if (process.env.DEMO_MAINTENANCE === 'true') return fail(503, 'The demo is briefly offline for maintenance.');
   const route = /^\/employees\/([^/]+)(?:\/(tasks)(?:\/([^/]+))?)?\/?$/.exec(path);
   if (!route) return fail(404, 'API route not found.');
   const [, empId, resource, taskId] = route;
@@ -26,12 +28,13 @@ async function handleTasks(method, path, body) {
       return fail(400, 'Invalid task.');
     }
   }
+  await cleanup(Employee.collection, time);
   const employee = await Employee.findById(DEMO_ID);
   if (!employee) return fail(503, 'The demo is being prepared. Please try again.');
   if (method === 'GET') return reply(200, employee.toJSON());
   if (method === 'POST') {
     if (employee.todo.length + employee.done.length >= MAX_TASKS) return fail(409, 'This shared demo holds 50 tasks. Delete a task before adding another.');
-    employee.todo.push({ text: body.text.trim() });
+    employee.todo.push({ text: body.text.trim(), isDemo: false, createdAt: new Date(time), expiresAt: new Date(time + RETENTION_MS) });
   }
   if (method === 'PUT') {
     // Validate the version the visitor actually saw, not just the version read
@@ -43,12 +46,14 @@ async function handleTasks(method, path, body) {
     if (ids.size !== tasks.length || ids.size !== existing.size || tasks.some(task => existing.get(task._id) !== task.text)) {
       return fail(409, 'The shared board changed. Reloaded the latest tasks; please try again.');
     }
-    employee.todo = body.todo.map(({ _id, text }) => ({ _id, text }));
-    employee.done = body.done.map(({ _id, text }) => ({ _id, text }));
+    const stored = new Map([...employee.todo, ...employee.done].map(task => [String(task._id), task.toObject()]));
+    employee.todo = body.todo.map(task => stored.get(task._id));
+    employee.done = body.done.map(task => stored.get(task._id));
   }
   if (method === 'DELETE') {
     const task = employee.todo.id(taskId) || employee.done.id(taskId);
     if (!task) return fail(404, 'That task was already removed.');
+    if (task.isDemo === true) return fail(403, 'The permanent sample task is kept for visitors. You can move it or create your own task.');
     task.deleteOne();
   }
   await employee.save();

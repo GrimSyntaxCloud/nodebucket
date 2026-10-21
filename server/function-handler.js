@@ -17,6 +17,7 @@ function createFunctionHandler({ prepare = ensureDatabase, limit = 120, now = Da
   let windowStart = now();
   let requests = 0;
   return async function handler(request) {
+    if (process.env.DEMO_MAINTENANCE === 'true') return { status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': '120' }, jsonBody: { err: 'Demo maintenance in progress.' } };
     const headers = { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' };
     const response = result => ({ ...result, headers });
     if (now() - windowStart >= 60000) { windowStart = now(); requests = 0; }
@@ -39,7 +40,7 @@ function createFunctionHandler({ prepare = ensureDatabase, limit = 120, now = Da
         await mongoose.connection.db.command({ ping: 1 });
         return response({ status: 200, jsonBody: { status: 'ok' } });
       }
-      return response(await handleTasks(request.method, path, body));
+      return response(await handleTasks(request.method, path, body, now()));
     } catch (error) {
       return response(errorResponse(error));
     }

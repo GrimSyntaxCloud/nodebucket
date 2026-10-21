@@ -115,7 +115,7 @@ Read [the setup guide](docs/azure-setup.md) for the account handoff, billing
 boundaries, provisioning, GitHub variables, and live verification checklist.
 
 - Azure Static Web Apps **Free**, including a managed Node.js 22 Functions API.
-- Cosmos DB **MongoDB API**, free tier enabled, one region, one 400 RU/s collection,
+- Cosmos DB **MongoDB API**, free tier enabled, one region, a shared 400 RU/s database pool,
   1,000 RU/s account cap.
 - GitHub Actions tests and builds pull requests. Deployment requires an explicitly
   enabled variable and the `azure` environment; it uses an app-specific deployment
@@ -137,3 +137,13 @@ subscription spending limit enabled and do not upgrade it automatically.
 
 The original database config was removed from current code. Rotate any old
 credentials that were committed; the old values remain in Git history.
+
+## Shared demo database and 96-hour retention
+
+Azure uses `portfolio-demos`, a single **400 RU/s manual shared pool** for Nodebucket, BCRS, and Pets-R-Us. Collections share capacity, while separate MongoDB roles restrict each app to its own collections. The account remains free-tier, single-region, capped at 1,000 RU/s; the subscription spending limit stays enabled. Do not upgrade the trial when it expires. The infrastructure template references an existing pool and requires a private scoped credential; it does not create dedicated allocations.
+
+Visitor data expires 96 hours after creation. Edits and task moves do not renew the deadline. BCRS accounts and their invoices expire together; invoices added to its shared guest preview have their own deadline. Nodebucket keeps its employee board and permanent sample task. Server-owned `isDemo` flags protect the fictional samples from cleanup and deletion.
+
+The API rejects expired data at the deadline. `.github/workflows/cleanup.yml` also runs hourly using the `azure` environment secret `DEMO_CLEANUP_MONGODB_URI` and repository variable `DEMO_CLEANUP_ENABLED=true`. It logs counts only. GitHub can delay schedules or disable them after 60 days of repository inactivity, so physical deletion happens on the next successful cleanup, usually within an hour; API requests provide another cleanup opportunity. Check Actions when maintaining the demo.
+
+`DEMO_MAINTENANCE=true` returns HTTP 503 before database access during backups or migration. Existing unclassified visitor data receives a one-time 96-hour grace period during migration. Database credentials stay in server application settings and protected Actions secrets, never frontend code or committed configuration. Local setup instructions and local database defaults above remain unchanged.

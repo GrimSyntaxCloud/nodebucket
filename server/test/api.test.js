@@ -175,3 +175,24 @@ test('both adapters reject non-JSON writes; unreadable function bodies return a 
   assert.equal(response.status, 503);
   assert(!JSON.stringify(response).includes('private body details'));
 });
+
+test('96-hour expiry survives task moves, protects seed data, and invalidates stale boards', async () => {
+  const { handleTasks } = require('../tasks');
+  const { RETENTION_MS, SEED_TASK_ID, cleanup } = require('../retention');
+  const time = Date.now();
+  const created = await handleTasks('POST', '/employees/1007/tasks', { text: 'Expires on schedule', isDemo: true }, time);
+  const task = created.jsonBody.todo.at(-1);
+  assert.equal(task.isDemo, false);
+  assert.equal(+task.expiresAt, time + RETENTION_MS);
+  const moved = await handleTasks('PUT', '/employees/1007/tasks', JSON.parse(JSON.stringify({ version: created.jsonBody.__v, todo: created.jsonBody.todo.slice(0,-1), done: [{ ...task, expiresAt: '2099-01-01', isDemo: true }] })), time + 1000);
+  assert.equal(moved.status, 200);
+  assert.equal(+moved.jsonBody.done[0].expiresAt, time + RETENTION_MS);
+  assert.equal(moved.jsonBody.done[0].isDemo, false);
+  assert.equal((await handleTasks('DELETE', `/employees/1007/tasks/${SEED_TASK_ID}`, null, time)).status, 403);
+  assert.equal((await handleTasks('GET', '/employees/1007/tasks', null, time + RETENTION_MS - 1)).jsonBody.done.length, 1);
+  const expired = await handleTasks('GET', '/employees/1007/tasks', null, time + RETENTION_MS);
+  assert.equal(expired.jsonBody.done.length, 0);
+  assert.equal(expired.jsonBody.todo[0].isDemo, true);
+  assert.equal((await handleTasks('PUT', '/employees/1007/tasks', { version: moved.jsonBody.__v, todo: moved.jsonBody.todo, done: moved.jsonBody.done }, time + RETENTION_MS)).status, 409);
+  assert.deepEqual(await cleanup(Employee.collection, time + RETENTION_MS), { boardsCleaned: 0 });
+});
