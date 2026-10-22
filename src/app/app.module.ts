@@ -26,10 +26,7 @@ import { LoginComponent } from './pages/login/login.component';
 /**
  * modules for the error messages, forms, and card
  */
-import { MessageModule } from 'primeng/message';
 import { AppMessagesComponent } from './shared/app-messages.component';
-import { providePrimeNG } from 'primeng/config';
-import Material from '@primeuix/themes/material';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -70,7 +67,6 @@ import {DragDropModule} from '@angular/cdk/drag-drop';
     MatButtonModule,
     MatIconModule,
     HttpClientModule,
-    MessageModule,
     MatMenuModule,
     MatDividerModule,
     MatFormFieldModule,
@@ -82,7 +78,7 @@ import {DragDropModule} from '@angular/cdk/drag-drop';
     DragDropModule
 
   ],
-  providers: [provideZoneChangeDetection(), providePrimeNG({ theme: { preset: Material, options: { darkModeSelector: false } } })],
+  providers: [provideZoneChangeDetection()],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

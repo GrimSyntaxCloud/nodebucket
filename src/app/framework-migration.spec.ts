@@ -4,7 +4,7 @@ import { AppModule } from './app.module';
 import { AppMessagesComponent } from './shared/app-messages.component';
 import { LoginComponent } from './pages/login/login.component';
 
-// Compile the real NgModule and Material/PrimeNG templates, not just component classes.
+// Compile the real NgModule and Material templates, not just component classes.
 describe('Angular framework migration', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
@@ -32,6 +32,6 @@ describe('Angular framework migration', () => {
     fixture.nativeElement.querySelector('button').click();
     fixture.detectChanges();
     expect(remaining).toEqual([]);
-    expect(fixture.nativeElement.querySelector('p-message')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.app-message')).toBeNull();
   });
 });
