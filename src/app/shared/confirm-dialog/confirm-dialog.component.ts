@@ -12,7 +12,7 @@
  * imports the MatDialog and mat_dialog_data from the angular material dialog
  * imports the dialog data interface from the dialog-data.interface.ts file
  */
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { DialogData } from '../models/dialog-data.interface';
 
@@ -20,6 +20,7 @@ import { DialogData } from '../models/dialog-data.interface';
   standalone: false,
   selector: 'app-confirm-dialog',
   templateUrl: './confirm-dialog.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./confirm-dialog.component.css'],
 })
 

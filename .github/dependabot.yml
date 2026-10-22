@@ -6,9 +6,23 @@ updates:
       interval: weekly
     open-pull-requests-limit: 3
     groups:
+      angular-stack:
+        patterns: ["@angular/*", "@angular-devkit/*", "ngx-cookie-service", "typescript", "zone.js"]
+        update-types: [minor, patch]
       compatible-updates:
         patterns: ["*"]
         update-types: [minor, patch]
+    # Major framework changes require ng update migrations and a coordinated review.
+    # Angular 22's compiler supports TypeScript >=6.0 <6.1.
+    ignore:
+      - dependency-name: "@angular/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@angular-devkit/*"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "ngx-cookie-service"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        versions: [">=6.1.0"]
   - package-ecosystem: npm
     directory: "/server"
     schedule:

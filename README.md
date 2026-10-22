@@ -26,7 +26,7 @@ Angular browser app → /api → Node.js Azure Functions → Cosmos DB (MongoDB 
                               ↳ Express adapter for local development
 ```
 
-- **Frontend:** Angular 21 (LTS), TypeScript, Angular Material, and CDK drag-and-drop.
+- **Frontend:** Angular 22, TypeScript, Angular Material, and CDK drag-and-drop.
   Angular services load tasks and send create, move/reorder, and delete requests.
 - **API:** `server/tasks.js` implements the task operations shared by the local
   Express adapter and the deployed Azure Functions adapter. Only the fixed demo
@@ -58,7 +58,7 @@ deploys `main` when the deployment variable and secret are configured.
 
 ## Local development
 
-Use Node 22.12 or newer within Node 22 (`.nvmrc`):
+Use Node 22.22.3 or newer within Node 22 (`.nvmrc`):
 
 ```sh
 npm ci
@@ -91,22 +91,22 @@ backend. Angular build tooling, test databases, credentials and Git history are
 excluded. Integration tests cover persistent task operations, malformed requests,
 concurrent edits (including stale browser tabs), task limits, JSON validation,
 and request throttling. Vitest tests cover opening the demo, submitting board
-versions, preventing duplicate saves, and real Angular/Material/PrimeNG template
+versions, preventing duplicate saves, and real Angular/Material template
 rendering. Tests use jsdom; Chrome is not required.
 
-Angular 21 and its UI libraries use patched, locked dependencies. CI audits the
+Angular 22 and its UI libraries use patched, locked dependencies. CI audits the
 complete frontend toolchain and the independently locked API. A clean audit covers
 known dependency advisories, not every possible application vulnerability. See
 the setup guide for limits.
 
 ## Framework maintenance
 
-The frontend uses Angular 21.2, Material/CDK 21.2, PrimeNG 21, TypeScript 5.9,
+The frontend uses Angular 22.2, Material/CDK 22.2, TypeScript 6.0,
 and Angular’s application builder. Native CSS replaces retired Flex Layout.
 NgModules, zone-based updates, the original routes, and the existing API remain.
 The build output stays in `dist/nodebucket`, preserving local and Azure packaging.
 
-The npm overrides pin Vite 7.3.7 and the Angular CLI’s MCP SDK 1.32.1 to
+The npm overrides pin Vite 8.3.5 and the Angular CLI’s MCP SDK 1.32.1 to
 patched compatible versions. Recheck those overrides when upgrading the CLI.
 
 ## Azure setup and deployment
@@ -155,3 +155,11 @@ The interface uses a graphite and warm-paper workspace with lilac accents, a com
 Tasks can still be dragged with Angular CDK. Each task also has a keyboard- and touch-accessible Complete or Back to Todo button that uses the same versioned API operation. Creation, deletion confirmation, disabled pending states, and polite status feedback remain available. Animations respect reduced-motion preferences. The sample contact details and company story are explicitly labeled fictional.
 
 This redesign does not change the API, MongoDB collections, shared 400 RU/s database allocation, 50-task bound, permanent sample protection, or fixed 96-hour visitor-task cleanup. It installs no new dependencies.
+
+### Coordinated frontend updates
+
+Use Node.js 22.22.3 or newer in the Node 22 release line. The frontend uses Angular 22 with TypeScript 6.0; Angular, Material/CDK, and (where used) ngx-cookie-service must stay compatible. Dependabot groups their minor/patch updates. Future framework majors require a reviewed `ng update` migration, and TypeScript 6.1+ is deferred until the Angular compiler supports it. Other compatible updates and security scanning remain enabled.
+
+Before merging an upgrade, require the pull-request workflow to pass dependency audits, existing tests, and the production build. Main-branch deployment also waits for those checks. The hosting tier, backend, demo seed data, and 96-hour visitor-data cleanup are unchanged.
+
+PrimeNG has been removed: inline messages use Angular templates, tables use semantic HTML, confirmations use Angular Material, and BCRS charts use Chart.js directly. These replacements require no license key, paid account, or annual renewal.

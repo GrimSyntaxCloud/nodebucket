@@ -7,7 +7,7 @@
 ===========================================
 */
 
-import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
 import { CookieService } from 'ngx-cookie-service';
 
@@ -15,6 +15,7 @@ import { CookieService } from 'ngx-cookie-service';
   standalone: false,
   selector: 'app-base-layout',
   templateUrl: './base-layout.component.html',
+  changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./base-layout.component.css'],
 })
 
