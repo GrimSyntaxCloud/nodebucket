@@ -1,9 +1,106 @@
-.main-welcome {
-  margin-top: 30px;
-  text-align: center;
+h1 em {
+  font-family: Georgia, serif;
+  color: var(--accent);
+  font-weight: 400;
 }
-
-.task-container {
-  width: 45%;
-  margin: 0 auto;
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+.contact-note {
+  background: #ded4ed;
+  padding: 40px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 5px;
+  min-height: 400px;
+}
+.contact-grid h2 {
+  font-size: 42px;
+  line-height: 1.1;
+  margin: 35px 0;
+}
+.contact-note address {
+  font-style: normal;
+  line-height: 1.8;
+  font-size: 15px;
+  position: relative;
+  z-index: 1;
+}
+.demo-label {
+  font: 9px monospace;
+  display: block;
+  margin-top: 16px;
+  color: #5c4b72;
+}
+.coordinate-art {
+  position: absolute;
+  right: -20px;
+  bottom: -70px;
+  width: 220px;
+  height: 220px;
+  display: grid;
+  place-items: center;
+  transform: rotate(-13deg);
+}
+.coordinate-art span {
+  font:
+    bold 100px Georgia,
+    serif;
+  color: #8f75b1;
+}
+.coordinate-art i {
+  position: absolute;
+  inset: 0;
+  border: 1px solid #9f8cb6;
+  border-radius: 50%;
+}
+.coordinate-art i:nth-child(3) {
+  inset: 25px;
+}
+.coordinate-art i:nth-child(4) {
+  inset: 50px;
+}
+.contact-details {
+  padding: 40px;
+}
+dl {
+  margin-bottom: 30px;
+}
+dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid var(--line);
+  padding: 20px 0;
+}
+dt {
+  font-size: 12px;
+  color: var(--muted);
+}
+dd {
+  margin: 0;
+  font: 17px monospace;
+}
+.contact-details p {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.8;
+  margin-bottom: 30px;
+}
+@media (max-width: 760px) {
+  .contact-grid {
+    grid-template-columns: 1fr;
+  }
+  .contact-note,
+  .contact-details {
+    padding: 28px;
+  }
+  .contact-grid h2 {
+    font-size: 35px;
+  }
+  .contact-details {
+    padding: 15px 0;
+  }
 }

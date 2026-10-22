@@ -1,25 +1,11 @@
-<!--
-============================================
- Title: confirm-dialog.component.html
- Author: Andres Macias
- Date:   02/05/23
- Description: contains the html for the confirm dialog component
-===========================================
--->
-
-<!--
-  Description: This is the dialog that will be displayed when the user clicks the delete button
--->
-<h2>{{dialogData.header}}</h2>
-
+<h2 mat-dialog-title>{{ dialogData.header }}</h2>
 <div mat-dialog-content>
-  <p>{{dialogData.content}}</p>
-  <small style="color: red;">Warning: this action cannot be undone.</small>
+  <p>{{ dialogData.content }}</p>
+  <p class="delete-warning">This action cannot be undone.</p>
 </div>
-
-<mat-divider></mat-divider>
-
 <div mat-dialog-actions align="end">
-  <button mat-raised-button matDialogClose="cancel" color="primary">No thanks</button>
-  <button mat-raised-button matDialogClose="confirm" color="primary" cdkFocusInitial>Confirm</button>
+  <button mat-button matDialogClose="cancel" cdkFocusInitial>Keep task</button
+  ><button mat-flat-button matDialogClose="confirm" color="warn">
+    Delete task
+  </button>
 </div>

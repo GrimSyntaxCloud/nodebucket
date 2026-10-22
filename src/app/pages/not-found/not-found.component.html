@@ -1,24 +1,13 @@
-
-<!--
-============================================
- Title: not-found.component.html
- Author: Andres Macias
- Date:   01/29/23
- Description: contains code for the log in page
-===========================================
--->
-
-<div class="layout-row main-welcome">
-  <img src="../../../assets/images/not-found/bucket.svg" alt="bucket" width="300">
-  <mat-card>
-    <mat-card-title class="">
-      <h1 class="title">404 Page not found!</h1>
-    </mat-card-title>
-      <mat-card-content>
-        <h2>Derp! Looks like you can't find your bucket!</h2>
-       <button mat-raised-button color="primary" routerLink="">Return Home</button>
-      </mat-card-content>
-  </mat-card>
-  <img src="../../../assets/images/not-found/person.svg" alt="person" width="600">
-
-</div>
+<section class="missing">
+  <a class="brand" routerLink="/"
+    ><span class="brand-mark" aria-hidden="true">n</span>nodebucket</a
+  >
+  <p class="eyebrow">404 / A SMALL DETOUR</p>
+  <h1>This task wandered<br />off the board.</h1>
+  <p>
+    The page you’re looking for isn’t here. Let’s get back to making progress.
+  </p>
+  <a class="primary-button" routerLink="/"
+    >Return home <span aria-hidden="true">↗</span></a
+  >
+</section>

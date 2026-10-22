@@ -7,7 +7,7 @@
 ===========================================
 */
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ElementRef, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { CookieService } from 'ngx-cookie-service';
 
@@ -15,7 +15,7 @@ import { CookieService } from 'ngx-cookie-service';
   standalone: false,
   selector: 'app-base-layout',
   templateUrl: './base-layout.component.html',
-  styleUrls: ['./base-layout.component.css']
+  styleUrls: ['./base-layout.component.css'],
 })
 
 /**
@@ -27,16 +27,23 @@ import { CookieService } from 'ngx-cookie-service';
  * logout method purpose: This method will be used to delete the cookies and navigate to the login page.
  */
 export class BaseLayoutComponent implements OnInit {
-
   year: number = Date.now();
-
-  constructor(private cookieService: CookieService, private router: Router) { }
-
-  ngOnInit(): void {
+  @ViewChild('mainContent') mainContent!: ElementRef<HTMLElement>;
+  focusContent(event: Event): void {
+    event.preventDefault();
+    this.mainContent.nativeElement.focus();
+    this.mainContent.nativeElement.scrollIntoView();
   }
+
+  constructor(
+    private cookieService: CookieService,
+    private router: Router,
+  ) {}
+
+  ngOnInit(): void {}
 
   logout() {
     this.cookieService.deleteAll();
-    this.router.navigate(['/session/login'])
+    this.router.navigate(['/session/login']);
   }
 }
