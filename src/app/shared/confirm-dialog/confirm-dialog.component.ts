@@ -14,14 +14,13 @@
  */
 import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import {DialogData} from '../models/dialog-data.interface';
-
+import { DialogData } from '../models/dialog-data.interface';
 
 @Component({
   standalone: false,
   selector: 'app-confirm-dialog',
   templateUrl: './confirm-dialog.component.html',
-  styleUrls: ['./confirm-dialog.component.css']
+  styleUrls: ['./confirm-dialog.component.css'],
 })
 
 /**
@@ -31,16 +30,11 @@ import {DialogData} from '../models/dialog-data.interface';
  * data: This is the data that will be used to create the dialog data.
  */
 export class ConfirmDialogComponent implements OnInit {
-
   dialogData: DialogData;
 
   constructor(@Inject(MAT_DIALOG_DATA) public data: DialogData) {
     this.dialogData = data;
-    console.log(this.dialogData);
-
-   }
-
-  ngOnInit(): void {
   }
 
+  ngOnInit(): void {}
 }

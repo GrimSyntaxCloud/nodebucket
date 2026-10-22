@@ -1,14 +1,26 @@
 import { vi } from 'vitest';
 import { FormBuilder } from '@angular/forms';
-import { of, throwError } from 'rxjs';
+import { of, throwError, Subject } from 'rxjs';
 import { LoginComponent } from './login.component';
 
 describe('Opening the shared demo', () => {
   it('stores the demo display identity after the API accepts the ID', () => {
     const router = { navigate: vi.fn() };
     const cookies = { set: vi.fn() };
-    const employees = { findEmployeeById: vi.fn().mockReturnValue(of({ empId: 1007, firstName: 'Demo', lastName: 'Visitor' })) };
-    const component = new LoginComponent(new FormBuilder(), router as any, cookies as any, {} as any, employees as any);
+    const employees = {
+      findEmployeeById: vi
+        .fn()
+        .mockReturnValue(
+          of({ empId: 1007, firstName: 'Demo', lastName: 'Visitor' }),
+        ),
+    };
+    const component = new LoginComponent(
+      new FormBuilder(),
+      router as any,
+      cookies as any,
+      {} as any,
+      employees as any,
+    );
     component.login();
     expect(employees.findEmployeeById).toHaveBeenCalledWith(1007);
     expect(cookies.set).toHaveBeenCalledWith('session_user', '1007', 1);
@@ -16,10 +28,36 @@ describe('Opening the shared demo', () => {
   });
   it('shows an API failure without opening the board', () => {
     const router = { navigate: vi.fn() };
-    const employees = { findEmployeeById: () => throwError(() => ({ error: { err: 'Please try again.' } })) };
-    const component = new LoginComponent(new FormBuilder(), router as any, {} as any, {} as any, employees as any);
+    const employees = {
+      findEmployeeById: () =>
+        throwError(() => ({ error: { err: 'Please try again.' } })),
+    };
+    const component = new LoginComponent(
+      new FormBuilder(),
+      router as any,
+      {} as any,
+      {} as any,
+      employees as any,
+    );
     component.login();
     expect(component.errorMessages[0].detail).toBe('Please try again.');
     expect(router.navigate).not.toHaveBeenCalled();
+  });
+  it('does not open duplicate sessions while the request is pending', () => {
+    const response = new Subject<any>();
+    const employees = { findEmployeeById: vi.fn().mockReturnValue(response) };
+    const component = new LoginComponent(
+      new FormBuilder(),
+      { navigate: vi.fn() } as any,
+      { set: vi.fn() } as any,
+      {} as any,
+      employees as any,
+    );
+    component.login();
+    component.login();
+    expect(employees.findEmployeeById).toHaveBeenCalledTimes(1);
+    expect(component.busy).toBe(true);
+    response.error({ error: { err: 'Try again.' } });
+    expect(component.busy).toBe(false);
   });
 });

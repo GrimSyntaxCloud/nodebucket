@@ -20,57 +20,83 @@ import { Employee } from '../../shared/models/employee.interface';
   standalone: false,
   selector: 'app-login',
   templateUrl: './login.component.html',
-  styleUrls: ['./login.component.css']
+  styleUrls: ['./login.component.css'],
 })
-
 export class LoginComponent implements OnInit {
   errorMessages: Message[] = [];
   employee: Employee;
+  busy = false;
 
   loginForm: FormGroup = this.fb.group({
     /**
      * checks for numbers between 0-9
      */
-    empId: [1007, Validators.compose([Validators.required, Validators.pattern('^[0-9]*$')])]
+    empId: [
+      1007,
+      Validators.compose([Validators.required, Validators.pattern('^[0-9]*$')]),
+    ],
   });
 
-  constructor(private fb: FormBuilder, private router: Router, private cookieService: CookieService,
-    private http: HttpClient, private employeeService: EmployeeService) {
+  constructor(
+    private fb: FormBuilder,
+    private router: Router,
+    private cookieService: CookieService,
+    private http: HttpClient,
+    private employeeService: EmployeeService,
+  ) {
     this.employee = {} as Employee;
   }
 
-  ngOnInit(): void {
-  }
+  ngOnInit(): void {}
 
   /**
    * The log in method contains the logic for verifying the empId matches a valid employee
    * from the database. Otherwise an the error message is passed to the error messages property.
    */
   login() {
+    if (this.busy || this.loginForm.invalid) return;
+    this.busy = true;
+    this.errorMessages = [];
     const empId = this.loginForm.controls['empId'].value;
 
     this.employeeService.findEmployeeById(empId).subscribe({
       next: (res) => {
+        this.busy = false;
         if (res) {
           this.employee = res;
-          this.cookieService.set('session_user', this.employee.empId.toString(), 1);
-          this.cookieService.set('session_name', `${this.employee.firstName} ${this.employee.lastName}`, 1);
+          this.cookieService.set(
+            'session_user',
+            this.employee.empId.toString(),
+            1,
+          );
+          this.cookieService.set(
+            'session_name',
+            `${this.employee.firstName} ${this.employee.lastName}`,
+            1,
+          );
           this.router.navigate(['/']);
-        }
-        else {
+        } else {
           this.errorMessages = [
             {
-              severity: 'error', summary: 'Error', detail: "Please enter a valid employeeId to continue."
-            }
-          ]
+              severity: 'error',
+              summary: 'Error',
+              detail: 'Please enter a valid employeeId to continue.',
+            },
+          ];
         }
       },
       error: (e) => {
+        this.busy = false;
         this.errorMessages = [
-          { severity: 'error', summary: 'Error', detail: e.error?.err || "The demo is unavailable. Please try again shortly." }
-        ]
-      }
-    })
+          {
+            severity: 'error',
+            summary: 'Error',
+            detail:
+              e.error?.err ||
+              'The demo is unavailable. Please try again shortly.',
+          },
+        ];
+      },
+    });
   }
-
 }

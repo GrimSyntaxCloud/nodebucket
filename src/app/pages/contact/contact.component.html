@@ -1,48 +1,40 @@
-<!--
-============================================
- Title: contact.component.html
- Author: Andres Macias
- Date:   01/27/23
- Description: contains code for the contact component.
-===========================================
--->
-
-<div class="layout-column main-welcome">
-  <div class="flex-grow">
-  <h1 class="title">
-   Contact us <br />
-  </h1>
-</div>
-
-<div class="flex-grow">
-  <div class="layout-row gap-15 task-container" style="margin-top: 20px">
-    <!-- todo column -->
-    <div class="flex-grow">
-      <mat-card class="mat-elevation-z0">
-        <mat-icon color="primary" style="width: 36px; height: 36px; font-size: 36px;">location_on</mat-icon>
-        <mat-card-title>Location</mat-card-title>
-        <mat-card-content>
-          <div class="task-column">
-            <address>
-              <p>1234 somewhere drive</p>
-              <p>Atlanta, Georgia</p>
-            </address>
-          </div>
-        </mat-card-content>
-      </mat-card>
+<header class="article-header">
+  <p class="eyebrow">THE STUDIO / CONTACT</p>
+  <h1>Stay in the <em>loop.</em></h1>
+  <p>
+    A little human connection goes a long way. This is the fictional contact
+    page from the original Nodebucket project.
+  </p>
+</header>
+<div class="contact-grid">
+  <section class="contact-note">
+    <span class="eyebrow">01 / DROP BY</span>
+    <h2>A place for<br />good ideas.</h2>
+    <address>1234 Somewhere Drive<br />Atlanta, Georgia</address>
+    <span class="demo-label">FICTIONAL DEMO ADDRESS</span>
+    <div class="coordinate-art" aria-hidden="true">
+      <span>n</span><i></i><i></i><i></i>
     </div>
-    <!-- done column -->
-    <div class="flex-grow">
-      <mat-card class="mat-elevation-z0">
-        <mat-icon color="primary" style="width: 36px; height: 36px; font-size: 36px;">call</mat-icon>
-        <mat-card-title>You can also reach us by:</mat-card-title>
-        <mat-card-content>
-          <div class="task-column">
-            <p>phone: 800-555-555</p>
-            <p>fax: 800-555-3345</p>
-          </div>
-        </mat-card-content>
-      </mat-card>
-  </div>
-</div>
+  </section>
+  <section class="contact-details">
+    <span class="eyebrow">02 / SAY HELLO</span>
+    <h2>Keep the<br />conversation going.</h2>
+    <dl>
+      <div>
+        <dt>Phone</dt>
+        <dd>800-555-555</dd>
+      </div>
+      <div>
+        <dt>Fax</dt>
+        <dd>800-555-3345</dd>
+      </div>
+    </dl>
+    <p>
+      These are original sample contact details, not working support channels.
+      No messages or personal information are collected here.
+    </p>
+    <a class="secondary-button" routerLink="/"
+      >Back to my board <span aria-hidden="true">↗</span></a
+    >
+  </section>
 </div>

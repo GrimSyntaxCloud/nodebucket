@@ -41,16 +41,16 @@ Angular browser app → /api → Node.js Azure Functions → Cosmos DB (MongoDB 
   size, and the 50-task limit. Writes require JSON. Rate limits apply per running
   process/Functions instance, not per authenticated user.
 
-| Location | Purpose |
-| --- | --- |
-| `src/app/pages/home/` | Task board and interaction state |
-| `src/app/shared/services/` | Angular API clients |
-| `server/tasks.js`, `server/models/` | Task operations and data model |
-| `server/app.js` | Local Express adapter |
-| `server/function-handler.js`, `server/functions.js` | Azure Functions adapter |
-| `server/database.js` | Database connection and non-destructive seed |
-| `server/test/` | Database integration tests and disposable preview |
-| `infra/`, `.github/workflows/azure.yml` | Hosting configuration and CI/CD |
+| Location                                            | Purpose                                           |
+| --------------------------------------------------- | ------------------------------------------------- |
+| `src/app/pages/home/`                               | Task board and interaction state                  |
+| `src/app/shared/services/`                          | Angular API clients                               |
+| `server/tasks.js`, `server/models/`                 | Task operations and data model                    |
+| `server/app.js`                                     | Local Express adapter                             |
+| `server/function-handler.js`, `server/functions.js` | Azure Functions adapter                           |
+| `server/database.js`                                | Database connection and non-destructive seed      |
+| `server/test/`                                      | Database integration tests and disposable preview |
+| `infra/`, `.github/workflows/azure.yml`             | Hosting configuration and CI/CD                   |
 
 Azure Static Web Apps Free hosts the frontend and included Node.js API. Cosmos DB
 provides MongoDB-compatible storage. GitHub Actions validates pull requests and
@@ -147,3 +147,11 @@ Visitor data expires 96 hours after creation. Edits and task moves do not renew 
 The API rejects expired data at the deadline. `.github/workflows/cleanup.yml` also runs hourly using the `azure` environment secret `DEMO_CLEANUP_MONGODB_URI` and repository variable `DEMO_CLEANUP_ENABLED=true`. It logs counts only. GitHub can delay schedules or disable them after 60 days of repository inactivity, so physical deletion happens on the next successful cleanup, usually within an hour; API requests provide another cleanup opportunity. Check Actions when maintaining the demo.
 
 `DEMO_MAINTENANCE=true` returns HTTP 503 before database access during backups or migration. Existing unclassified visitor data receives a one-time 96-hour grace period during migration. Database credentials stay in server application settings and protected Actions secrets, never frontend code or committed configuration. Local setup instructions and local database defaults above remain unchanged.
+
+## Productivity studio interface
+
+The interface uses a graphite and warm-paper workspace with lilac accents, a compact task board, tactile task slips, and a completion indicator calculated from the current Todo and Done lists. The asymmetric demo entry, About, Contact, and missing-page views share the same visual system. All UI typography and decorative artwork are local/system resources; no paid assets or animation service is required. Existing About photography retains its attribution.
+
+Tasks can still be dragged with Angular CDK. Each task also has a keyboard- and touch-accessible Complete or Back to Todo button that uses the same versioned API operation. Creation, deletion confirmation, disabled pending states, and polite status feedback remain available. Animations respect reduced-motion preferences. The sample contact details and company story are explicitly labeled fictional.
+
+This redesign does not change the API, MongoDB collections, shared 400 RU/s database allocation, 50-task bound, permanent sample protection, or fixed 96-hour visitor-task cleanup. It installs no new dependencies.

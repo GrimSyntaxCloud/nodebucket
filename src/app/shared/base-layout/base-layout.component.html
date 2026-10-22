@@ -1,44 +1,41 @@
-<!--
-============================================
- Title: base-layout.component.html
- Author: Andres Macias
- Date:   01/15/23
- Description: contains code for base template. Navigation, footer
-===========================================
--->
-<div class="layout-column main-container">
-
-  <!-- navigation -->
-  <nav  class="flex-grow">
-    <mat-toolbar color="primary">
-      <!-- navbar container -->
-      <div class="navbar-container" >
-        <!-- logo -->
-        <button class="logo" routerLink="/" mat-button>nodebucket</button>
-        <button class="navbar-link" routerLink="/" mat-button>Home</button>
-        <button class="navbar-link" routerLink='/about' mat-button>About</button>
-        <button class="navbar-link" routerLink='/contact' mat-button>Contact Us</button>
-      </div>
-      <div class="flex-grow"></div>
-      <button (click)="logout();" mat-button class="navbar-link">Log out</button>
-    </mat-toolbar>
-  </nav>
-
-  <!-- main content -->
-  <div class="flex-grow">
-    <main class="flex-full main-content">
-      <router-outlet></router-outlet>
-    </main>
-  </div>
-
-  <!-- footer -->
-  <div class="flex-grow">
-    <footer class="footer">
-      <mat-toolbar color="primary" class="footer-content">
-        <p>
-          &copy; {{year | date: 'yyyy'}} - nodebucket - <a href="https://www.bellevue.edu/" class="bu-link" target="_blank">Bellevue University</a>
-        </p>
-      </mat-toolbar>
-    </footer>
-  </div>
+<div class="workspace-shell">
+  <a class="skip-link" href="#main-content" (click)="focusContent($event)"
+    >Skip to content</a
+  >
+  <header class="workspace-nav">
+    <a class="brand" routerLink="/" aria-label="Nodebucket home"
+      ><span class="brand-mark" aria-hidden="true">n</span>nodebucket<span
+        class="studio-label"
+        >WORKSPACE</span
+      ></a
+    >
+    <nav aria-label="Main navigation">
+      <a
+        routerLink="/"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        >My board</a
+      >
+      <a routerLink="/about" routerLinkActive="active">About</a>
+      <a routerLink="/contact" routerLinkActive="active">Contact</a>
+    </nav>
+    <button class="logout" (click)="logout()">
+      Log out <span aria-hidden="true">↗</span>
+    </button>
+  </header>
+  <main id="main-content" tabindex="-1" #mainContent>
+    <router-outlet></router-outlet>
+  </main>
+  <footer>
+    <span>Small steps. Real progress.</span
+    ><span
+      >© {{ year | date: "yyyy" }} Nodebucket ·
+      <a
+        href="https://www.bellevue.edu/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Bellevue University project</a
+      ></span
+    >
+  </footer>
 </div>

@@ -1,21 +1,19 @@
-.main-welcome {
-  background-color: #e5e5f7;
-  background: repeating-linear-gradient(
-    -45deg,
-    #f9ec42,
-    #f6ffaa 5px,
-    #fffecb 5px,
-    #f5ffd9 25px
-  );
-  min-height: 100%;
+.missing {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 60px 25px;
 }
-
-.title {
-  text-align: center;
-  font-size: 48px;
+.missing > .eyebrow {
+  margin-top: 100px;
 }
-
-mat-card {
-  margin: auto;
-  background-color: rgb(181, 181, 181);
+.missing h1 {
+  font-size: clamp(40px, 7vw, 65px);
+  line-height: 1.1;
+}
+.missing > p:not(.eyebrow) {
+  color: var(--muted);
+  line-height: 1.8;
+}
+.missing .primary-button {
+  margin-top: 20px;
 }
