@@ -171,7 +171,7 @@ svg.compat-arrow {
 
 /* Keep text-entry controls readable without iPhone Safari focus zoom. */
 @media (max-width: 640px) {
-  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea {
+  #new-task, input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea {
     font-size: 16px;
   }
 }
